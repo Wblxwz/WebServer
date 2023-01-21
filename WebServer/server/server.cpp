@@ -1,7 +1,9 @@
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
+#include <fcntl.h>
 
 #include <iostream>
 #include <assert.h>
@@ -16,6 +18,43 @@ void Server::getLine(const char* c, const int& len)
 		tbuf[i] = c[i];
 		++i;
 	}
+}
+
+int Server::sendFile(const char* filename, const int& cfd)
+{
+	int fd = open(filename, O_RDONLY);
+	assert(fd >= 0);
+	while (true)
+	{
+		char buf[1024];
+		int len = read(fd, buf, sizeof(buf));
+		std::cout << len << std::endl;
+		if (len > 0)
+		{
+			send(cfd, buf, len, 0);
+			usleep(10);
+		}
+		else if (len == 0)
+		{
+			break;
+		}
+		else
+		{
+			abort();
+		}
+	}
+	std::cout << "sendFile" << std::endl;
+	return 0;
+}
+
+void Server::sendResponse(const int& cfd, const int& status, const char* descr, const char* type, const int& len)
+{
+	char buf[4096]{ '0' };
+	sprintf(buf, "http/1.1 %d %s\r\n", status, descr);
+	sprintf(buf + strlen(buf), "content-type: %s\r\n", type);
+	sprintf(buf + strlen(buf), "content-length: %d\r\n", len);
+	send(cfd, buf, strlen(buf), 0);
+	std::cout << "sendResponse" << std::endl;
 }
 
 void Server::serverListen()
@@ -53,10 +92,21 @@ void Server::serverListen()
 		char temp[1024]{ '0' };
 
 		len = recv(connfd, buf, sizeof(buf), NULL);
-		
-		getLine(buf, len);
-		std::cout << tbuf << std::endl;
 
+		getLine(buf, len);
+		//std::cout << tbuf << std::endl;
+		char bufg[20]{ '0' };
+		for (int i = 0; i < 3; ++i)
+		{
+			bufg[i] = tbuf[i];
+		}
+		//std::cout << bufg << std::endl;
+		if (!strcmp(bufg, "GET"))
+		{
+			//-1让浏览器自行获取长度
+			sendResponse(connfd, 200, "OK", "text/html; charset=utf-8", -1);
+			sendFile("./home.html", connfd);
+		}
 		close(connfd);
 	}
 

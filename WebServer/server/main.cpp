@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[])
 {
-	Server server(9999);
+	Server server(10000);
 	server.serverListen();
 	return 0;
 }
