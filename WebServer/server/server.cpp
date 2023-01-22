@@ -4,34 +4,40 @@
 #include <unistd.h>
 #include <cstring>
 #include <fcntl.h>
+#include <signal.h>
 
 #include <iostream>
 #include <assert.h>
 
 #include "server.h"
 
-void Server::getLine(const char* c, const int& len)
+void Server::init()
 {
-	int i = 0;
-	while (i < len && c[i] != '\n')
-	{
-		tbuf[i] = c[i];
-		++i;
-	}
+	content_type["html"] = "text/html; charset=utf-8";
+	content_type["ico"] = "image/x-icon";
 }
 
 int Server::sendFile(const char* filename, const int& cfd)
 {
+	//ico无法open
+	//注意此处没有更改tfile的值！
+	filename = parser.questionMark(filename);
 	int fd = open(filename, O_RDONLY);
 	assert(fd >= 0);
 	while (true)
 	{
 		char buf[1024];
 		int len = read(fd, buf, sizeof(buf));
-		std::cout << len << std::endl;
 		if (len > 0)
 		{
-			send(cfd, buf, len, 0);
+			int ret = send(cfd, buf, len, MSG_NOSIGNAL);
+			/*if (ret == -1)
+			{
+				if (errno != EAGAIN)
+				{
+					break;
+				}
+			}*/
 			usleep(10);
 		}
 		else if (len == 0)
@@ -47,7 +53,7 @@ int Server::sendFile(const char* filename, const int& cfd)
 	return 0;
 }
 
-void Server::sendResponse(const int& cfd, const int& status, const char* descr, const char* type, const int& len)
+void Server::sendResponseHead(const int& cfd, const int& status, const char* descr, const char* type, const int& len)
 {
 	char buf[4096]{ '0' };
 	sprintf(buf, "http/1.1 %d %s\r\n", status, descr);
@@ -93,20 +99,44 @@ void Server::serverListen()
 
 		len = recv(connfd, buf, sizeof(buf), NULL);
 
-		getLine(buf, len);
-		//std::cout << tbuf << std::endl;
-		char bufg[20]{ '0' };
-		for (int i = 0; i < 3; ++i)
+		int ll = 0;
+		parser.getLine(buf, tline);
+		std::cout << "tline:" << tline << std::endl;
+		parser.getStatus(tline, tstatus);
+		parser.getFile(tline, tfile);
+
+		if (!strcmp(tstatus, "GET"))
 		{
-			bufg[i] = tbuf[i];
+			std::string s(tfile);
+			if (s == "0")//没有文件请求
+			{
+				//-1让浏览器自行获取长度
+				sendResponseHead(connfd, 200, "OK", content_type["html"], -1);
+				sendFile("home.html", connfd);
+			}
+			else
+			{
+				std::string s1(tfile);
+				if (s1.find("favicon.ico") != -1)
+				{
+					std::cout << "123123123" << std::endl;
+					sendResponseHead(connfd, 200, "OK", content_type["ico"], -1);
+				}
+				else
+				{
+					sendResponseHead(connfd, 200, "OK", content_type["html"], -1);
+				}
+				sendFile(tfile, connfd);
+				std::cout << tfile << std::endl;
+				std::cout << "tline:" << tline << std::endl;
+			}
 		}
-		//std::cout << bufg << std::endl;
-		if (!strcmp(bufg, "GET"))
+		else if (!strcmp(tstatus, "POST"))
 		{
-			//-1让浏览器自行获取长度
-			sendResponse(connfd, 200, "OK", "text/html; charset=utf-8", -1);
-			sendFile("./home.html", connfd);
+			//ToDo:POST请求
+			std::cout << "tfile:" << tline << std::endl;
 		}
+
 		close(connfd);
 	}
 

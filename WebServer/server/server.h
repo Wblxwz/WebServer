@@ -1,5 +1,10 @@
 #pragma once
 
+#include <map>
+
+#include "http_parse.h"
+
+
 class Server
 {
 public:
@@ -9,12 +14,17 @@ public:
 	Server(const Server&) = delete;
 	Server& operator=(const Server&) = delete;
 
+	void init();
+
 	void serverListen();
-	void getLine(const char* c, const int& len);
 
 	int sendFile(const char* filename, const int& cfd);
-	void sendResponse(const int& cfd, const int& status, const char* descr, const char* type, const int& len);
+	void sendResponseHead(const int& cfd, const int& status, const char* descr, const char* type, const int& len);
 private:
 	int port;
-	char tbuf[1024];
+	char tline[128] = { '0' };
+	char tstatus[10] = { '0' };
+	char tfile[20] = { '0' };
+	std::map<const char*, const char*> content_type;
+	HttpParser parser;
 };
