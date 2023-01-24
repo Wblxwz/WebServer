@@ -1,4 +1,4 @@
-
+#include <string.h>
 
 #include "http_parse.h"
 
@@ -10,6 +10,7 @@ const int HttpParser::getLine(const char* c, char* tline)
 		tline[i] = c[i];
 		++i;
 	}
+	tline[i] = '\0';
 	return i;
 }
 
@@ -24,6 +25,7 @@ const int HttpParser::getStatus(const char* c, char* tstatus)
 	{
 		tstatus[cnt++] = i;
 	}
+	tstatus[cnt] = '\0';
 	return cnt;
 }
 
@@ -53,11 +55,13 @@ const int HttpParser::getFile(const char* tline, char* tfile)
 		{
 			tfile[cnt++] = i;
 		}
+		tfile[cnt] = '\0';
 		return pos2 - pos1 - 3;
 	}
 	else
 	{
 		//ToDo:favicon.ico
+		std::cout << "favicon.ico" << std::endl;
 		int cnt = 0;
 		std::string ss = s.substr(pos, 11);
 		for (auto i : ss)
@@ -65,8 +69,14 @@ const int HttpParser::getFile(const char* tline, char* tfile)
 			tfile[cnt] = i;
 			++cnt;
 		}
+		tfile[cnt] = '\0';
 		std::cout << "ss" << tfile << std::endl;
 		return 11;
 	}
+
+}
+
+const int HttpParser::getUser(const char* tline)
+{
 
 }

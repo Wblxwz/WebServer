@@ -1,7 +1,11 @@
 #pragma once
 
+#include <sys/stat.h>
+#include <mysql/mysql.h>
+
 #include <map>
 
+#include "connRAII.h"
 #include "http_parse.h"
 
 
@@ -14,17 +18,22 @@ public:
 	Server(const Server&) = delete;
 	Server& operator=(const Server&) = delete;
 
-	void init();
-
+	void init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn);
 	void serverListen();
 
-	int sendFile(const char* filename, const int& cfd);
-	void sendResponseHead(const int& cfd, const int& status, const char* descr, const char* type, const int& len);
+	int openFile(const char* filename);
+	void sendResponse(const int& cfd, const int& status, const char* descr, const char* type);
 private:
-	int port;
-	char tline[128] = { '0' };
+	int port, fd;
+
+	char tline[64] = { '0' };
 	char tstatus[10] = { '0' };
 	char tfile[20] = { '0' };
+
+	struct stat st;
 	std::map<const char*, const char*> content_type;
+	std::map<std::string, std::string> users;
 	HttpParser parser;
+
+	SqlConnPool* pool;
 };

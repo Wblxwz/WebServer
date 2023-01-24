@@ -7,60 +7,49 @@
 #include <signal.h>
 
 #include <iostream>
+#include <memory>
 #include <assert.h>
 
 #include "server.h"
 
-void Server::init()
+void Server::init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
 {
+	pool = SqlConnPool::getSqlConnPool();
+	pool->init(host,user,pwd,dbname,port,maxconn);
+	MYSQL* conn = nullptr;
+	connRAII sqlconn(pool, conn);
+	std::shared_ptr<int> s;
+	
 	content_type["html"] = "text/html; charset=utf-8";
 	content_type["ico"] = "image/x-icon";
 }
 
-int Server::sendFile(const char* filename, const int& cfd)
+int Server::openFile(const char* filename)
 {
-	//ico无法open
+	//ico无法send
 	//注意此处没有更改tfile的值！
 	filename = parser.questionMark(filename);
-	int fd = open(filename, O_RDONLY);
+	fd = open(filename, O_RDONLY);
 	assert(fd >= 0);
-	while (true)
-	{
-		char buf[1024];
-		int len = read(fd, buf, sizeof(buf));
-		if (len > 0)
-		{
-			int ret = send(cfd, buf, len, MSG_NOSIGNAL);
-			/*if (ret == -1)
-			{
-				if (errno != EAGAIN)
-				{
-					break;
-				}
-			}*/
-			usleep(10);
-		}
-		else if (len == 0)
-		{
-			break;
-		}
-		else
-		{
-			abort();
-		}
-	}
-	std::cout << "sendFile" << std::endl;
-	return 0;
+
+	//零拷贝技术
+	fstat(fd, &st);
+	return st.st_size;
 }
 
-void Server::sendResponseHead(const int& cfd, const int& status, const char* descr, const char* type, const int& len)
+void Server::sendResponse(const int& cfd, const int& status, const char* descr, const char* type)
 {
 	char buf[4096]{ '0' };
+
 	sprintf(buf, "http/1.1 %d %s\r\n", status, descr);
 	sprintf(buf + strlen(buf), "content-type: %s\r\n", type);
-	sprintf(buf + strlen(buf), "content-length: %d\r\n", len);
+	sprintf(buf + strlen(buf), "content-length: %d\r\n", st.st_size);
+
 	send(cfd, buf, strlen(buf), 0);
 	std::cout << "sendResponse" << std::endl;
+
+	sendfile(cfd, fd, NULL, st.st_size);
+	std::cout << "sendFile" << std::endl;
 }
 
 void Server::serverListen()
@@ -108,33 +97,35 @@ void Server::serverListen()
 		if (!strcmp(tstatus, "GET"))
 		{
 			std::string s(tfile);
-			if (s == "0")//没有文件请求
+			if (s == "")//没有文件请求
 			{
 				//-1让浏览器自行获取长度
-				sendResponseHead(connfd, 200, "OK", content_type["html"], -1);
-				sendFile("home.html", connfd);
+				openFile("home.html");
+				sendResponse(connfd, 200, "OK", content_type["html"]);
 			}
 			else
 			{
 				std::string s1(tfile);
+				openFile(tfile);
+				std::cout << "tfile:" << tfile << std::endl;
+				//ToDo:favicon.ico发送不能被解析
 				if (s1.find("favicon.ico") != -1)
 				{
 					std::cout << "123123123" << std::endl;
-					sendResponseHead(connfd, 200, "OK", content_type["ico"], -1);
+					sendResponse(connfd, 200, "OK", content_type["ico"]);
 				}
 				else
 				{
-					sendResponseHead(connfd, 200, "OK", content_type["html"], -1);
+					sendResponse(connfd, 200, "OK", content_type["html"]);
 				}
-				sendFile(tfile, connfd);
 				std::cout << tfile << std::endl;
-				std::cout << "tline:" << tline << std::endl;
 			}
 		}
 		else if (!strcmp(tstatus, "POST"))
 		{
 			//ToDo:POST请求
-			std::cout << "tfile:" << tline << std::endl;
+			std::cout << "post tline:" << tline << std::endl;
+
 		}
 
 		close(connfd);
