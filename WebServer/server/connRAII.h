@@ -6,10 +6,10 @@
 class connRAII
 {
 public:
-	connRAII(SqlConnPool* pool, MYSQL* con) :pool(pool)
+	connRAII(SqlConnPool* pool, MYSQL** con) :pool(pool)
 	{
-		con = pool->getConnection();
-		conn = con;
+		*con = pool->getConnection();
+		conn = *con;
 	}
 	~connRAII()
 	{

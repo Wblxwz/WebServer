@@ -15,10 +15,8 @@
 void Server::init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
 {
 	pool = SqlConnPool::getSqlConnPool();
-	pool->init(host,user,pwd,dbname,port,maxconn);
-	MYSQL* conn = nullptr;
-	connRAII sqlconn(pool, conn);
-	
+	pool->init(host, user, pwd, dbname, port, maxconn);
+
 	content_type["html"] = "text/html; charset=utf-8";
 	content_type["ico"] = "image/x-icon";
 }
@@ -124,11 +122,36 @@ void Server::serverListen()
 		{
 			//ToDo:POST«Î«Û
 			std::cout << "post tline:" << tline << std::endl;
-
+			MYSQL* conn = nullptr;
+			connRAII sqlconn(pool, &conn);
+			parser.getInfo(buf, info);
+			sql.useDb(conn);
+			if (tfile == "signup")
+			{
+				sql.insert(conn, info.getInfo().first, info.getInfo().second);
+			}
+			else
+			{
+				//login
+				std::string pwd = sql.search(conn, info.getInfo().first);
+				if (pwd.empty())
+				{
+					std::cout << "no user" << std::endl;
+				}
+				else
+				{
+					if (pwd == info.getInfo().second)
+					{
+						std::cout << "have user" << std::endl;
+					}
+					else
+					{
+						std::cout << "error pwd" << std::endl;
+					}
+				}
+			}
 		}
-
 		close(connfd);
 	}
-
 	close(listenfd);
 }

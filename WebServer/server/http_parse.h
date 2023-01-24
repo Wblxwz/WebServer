@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 
+#include "info.h"
 
 class HttpParser
 {
@@ -18,8 +19,8 @@ public:
 	const int getLine(const char* c, char* tline);
 	const int getStatus(const std::string& c, std::string& tstatus);
 	const int getFile(const std::string& tline, std::string& tfile);
-	/*const int getLoginInfo(const char* tline, Info& info);
-	const int getLoginInfo(const char* tline, Info& info);*/
+	
+	void getInfo(const char* buf, Info& info);
 	//解决问号的读取问题
 	const char* questionMark(const char* c);
 private:

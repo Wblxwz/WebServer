@@ -7,6 +7,7 @@
 
 #include "connRAII.h"
 #include "http_parse.h"
+#include "sqloperate.h"
 
 
 class Server
@@ -34,7 +35,8 @@ private:
 	std::map<const char*, const char*> content_type;
 
 	HttpParser parser;
-	//Info info;
+	Info info;
+	SqlOperate sql;
 
 	std::string host, user, pwd, dbname;
 
