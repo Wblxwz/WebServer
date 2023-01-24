@@ -3,12 +3,27 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>signup</title>
-<link rel="stylesheet" href="divstyle.css" />
+<style type="text/css">
+div {
+	margin-top: 100px;
+}
+</style>
 </head>
 
 <body>
-<div>
+<div align="center">
   <h1 align="center">请注册</h1>
 </div>
+<form method="post" action="signup">
+  <div align="center">
+    <input type="text" name="user" placeholder="用户名" required="required" />
+  </div>
+  <div align="center">
+    <input type="password" name="pwd" placeholder="密码" required="required" />
+  </div>
+  <div align="center">
+    <button type="submit">注册</button>
+  </div>
+</form>
 </body>
 </html>

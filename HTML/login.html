@@ -3,12 +3,28 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>login</title>
-<link rel="stylesheet" href="divstyle.css" />
+<style type="text/css">
+div {
+	margin-top: 100px;
+}
+</style>
 </head>
 
 <body>
 <div>
-  <h1 align="center">用户名 欢迎登录</h1>
+  <h1 align="center" style="margin-top:100px">请登录</h1>
 </div>
+</div>
+<form method="post" action="login">
+  <div align="center">
+    <input type="text" name="user" placeholder="用户名" required="required" />
+  </div>
+  <div align="center">
+    <input type="password" name="pwd" placeholder="密码" required="required" />
+  </div>
+  <div align="center">
+    <button type="submit">登录</button>
+  </div>
+</form>
 </body>
 </html>
