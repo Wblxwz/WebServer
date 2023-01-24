@@ -18,7 +18,6 @@ void Server::init(const std::string& host, const std::string& user, const std::s
 	pool->init(host,user,pwd,dbname,port,maxconn);
 	MYSQL* conn = nullptr;
 	connRAII sqlconn(pool, conn);
-	std::shared_ptr<int> s;
 	
 	content_type["html"] = "text/html; charset=utf-8";
 	content_type["ico"] = "image/x-icon";
@@ -94,7 +93,7 @@ void Server::serverListen()
 		parser.getStatus(tline, tstatus);
 		parser.getFile(tline, tfile);
 
-		if (!strcmp(tstatus, "GET"))
+		if (!strcmp(tstatus.c_str(), "GET"))
 		{
 			std::string s(tfile);
 			if (s == "")//没有文件请求
@@ -106,7 +105,7 @@ void Server::serverListen()
 			else
 			{
 				std::string s1(tfile);
-				openFile(tfile);
+				openFile(tfile.c_str());
 				std::cout << "tfile:" << tfile << std::endl;
 				//ToDo:favicon.ico发送不能被解析
 				if (s1.find("favicon.ico") != -1)
@@ -121,7 +120,7 @@ void Server::serverListen()
 				std::cout << tfile << std::endl;
 			}
 		}
-		else if (!strcmp(tstatus, "POST"))
+		else if (!strcmp(tstatus.c_str(), "POST"))
 		{
 			//ToDo:POST请求
 			std::cout << "post tline:" << tline << std::endl;

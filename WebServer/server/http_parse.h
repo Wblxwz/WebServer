@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 
+
 class HttpParser
 {
 public:
@@ -15,11 +16,12 @@ public:
 
 	//返回读取字符的个数
 	const int getLine(const char* c, char* tline);
-	const int getStatus(const char* c, char* tstatus);
-	const int getFile(const char* tline, char* tfile);
-	const int getUser(const char *tline);
+	const int getStatus(const std::string& c, std::string& tstatus);
+	const int getFile(const std::string& tline, std::string& tfile);
+	/*const int getLoginInfo(const char* tline, Info& info);
+	const int getLoginInfo(const char* tline, Info& info);*/
 	//解决问号的读取问题
-	const char * questionMark(const char* c);
+	const char* questionMark(const char* c);
 private:
 
 };

@@ -27,13 +27,16 @@ private:
 	int port, fd;
 
 	char tline[64] = { '0' };
-	char tstatus[10] = { '0' };
-	char tfile[20] = { '0' };
+	std::string tstatus;
+	std::string tfile;
 
 	struct stat st;
 	std::map<const char*, const char*> content_type;
-	std::map<std::string, std::string> users;
+
 	HttpParser parser;
+	//Info info;
+
+	std::string host, user, pwd, dbname;
 
 	SqlConnPool* pool;
 };
