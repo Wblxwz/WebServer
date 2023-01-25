@@ -23,9 +23,11 @@ public:
 	void serverListen();
 
 	int openFile(const char* filename);
-	void sendResponse(const int& cfd, const int& status, const char* descr, const char* type);
+	void sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type);
+
+	bool check(MYSQL* conn, const std::string& username, const std::string& pwd);
 private:
-	int port, fd;
+	int port;
 
 	char tline[64] = { '0' };
 	std::string tstatus;

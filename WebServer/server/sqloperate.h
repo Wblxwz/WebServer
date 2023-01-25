@@ -16,7 +16,10 @@ public:
 
 	void useDb(MYSQL* conn);
 	void insert(MYSQL *conn,const std::string& username,const std::string& userpwd);
+
+
 	std::string search(MYSQL* conn, const std::string& username);
+	bool check(MYSQL*conn, const std::string& username);
 private:
 
 };
