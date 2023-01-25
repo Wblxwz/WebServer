@@ -46,37 +46,20 @@ int Server::openFile(const char* filename)
 
 void Server::sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type)
 {
-	char buf[40960]{ '0' };
+	char buf[4096]{ '0' };
+	int num = 0;
 
-	sprintf(buf, "http/1.1 %d %s\r\n", status, descr);
-	sprintf(buf + strlen(buf), "content-type: %s\r\n", type);
-	sprintf(buf + strlen(buf), "content-length: %d\r\n", st.st_size);
-	send(cfd, buf, strlen(buf), 0);
-	/*while (true)
-	{
-		char buf[1024];
-		int len = read(fd, buf, sizeof(buf));
-		if (len > 0)
-		{
-			send(cfd, buf, len, 0);
-			usleep(10);
-		}
-		else if (len == 0)
-		{
-			break;
-		}
-		else
-		{
-			perror("read");
-		}
-	}
-	close(fd);*/
+	num = sprintf(buf, "http/1.1 %d %s\r\n", status, descr);
+	num = sprintf(buf + num, "content-type: %s\r\n", type);
+	sprintf(buf + num + 4, "content-length: %d\r\n\r\n", st.st_size);
+	
+	int ret = send(cfd, buf, strlen(buf), 0);
+	assert(ret > 0);
+	
 	off_t offset = 0;
-	int size = lseek(fd, 0, SEEK_END);
-	lseek(fd, 0, SEEK_SET);
-	while (offset < size)
+	while (offset < st.st_size)
 	{
-		std::cout << "num:" << sendfile(cfd, fd, &offset, size);
+		std::cout << "num:" << sendfile(cfd, fd, &offset, st.st_size) << std::endl;
 	}
 	close(fd);
 	std::cout << "sendResponse" << std::endl;
