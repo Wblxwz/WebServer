@@ -24,7 +24,7 @@ void SqlConnPool::init(const std::string& host, const std::string& user, const s
 		assert(con);
 		con = mysql_real_connect(con, host.c_str(), user.c_str(), pwd.c_str(), dbname.c_str(), port, NULL, 0);
 		assert(con);
-		connVector.push_back(con);
+		connDeque.push_back(con);
 		++freecon;
 	}
 
@@ -35,7 +35,7 @@ void SqlConnPool::init(const std::string& host, const std::string& user, const s
 MYSQL* SqlConnPool::getConnection()
 {
 	MYSQL* con = nullptr;
-	if (connVector.size() == 0)
+	if (connDeque.size() == 0)
 	{
 		return nullptr;
 	}
@@ -46,8 +46,8 @@ MYSQL* SqlConnPool::getConnection()
 	//构造自动加锁，析构自动解锁
 	std::lock_guard<std::mutex> locker(mutex);
 
-	con = connVector.front();
-	connVector.erase(connVector.begin());
+	con = connDeque.front();
+	connDeque.pop_front();
 
 	--freecon;
 	++curconn;
@@ -66,7 +66,7 @@ bool SqlConnPool::releaseConnection(MYSQL* con)
 
 	std::lock_guard<std::mutex> locker(mutex);
 
-	connVector.push_back(con);
+	connDeque.push_back(con);
 	++freecon;
 	--curconn;
 
@@ -85,15 +85,15 @@ int SqlConnPool::getFreeConn()
 void SqlConnPool::destroyPool()
 {
 	std::lock_guard<std::mutex> locker(mutex);
-	if (connVector.size() > 0)
+	if (connDeque.size() > 0)
 	{
-		for (auto& con : connVector)
+		for (auto& con : connDeque)
 		{
 			mysql_close(con);
 		}
 		curconn = 0;
 		freecon = 0;
-		connVector.clear();
+		connDeque.clear();
 	}
 	sem_destroy(&sem);
 }

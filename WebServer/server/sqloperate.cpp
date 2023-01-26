@@ -27,7 +27,6 @@ bool SqlOperate::check(MYSQL* conn, const std::string& username)
 	MYSQL_ROW row = mysql_fetch_row(res);
 	while ((row = mysql_fetch_row(res)))
 	{
-		std::cout << "row pwd:" << row[0] << std::endl;
 		return false;
 	}
 	return true;

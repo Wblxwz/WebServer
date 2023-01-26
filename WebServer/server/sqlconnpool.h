@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mysql/mysql.h>
-#include <vector>
+#include <deque>
 #include <iostream>
 #include <mutex>
 #include <semaphore.h>
@@ -29,7 +29,7 @@ private:
 	sem_t sem;
 	std::mutex mutex;
 
-	std::vector<MYSQL*> connVector;
+	std::deque<MYSQL*> connDeque;
 	std::string host, user, pwd, dbname;
 	int port, maxconn, curconn = 0, freecon = 0;
 };
