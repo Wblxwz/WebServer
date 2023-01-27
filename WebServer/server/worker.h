@@ -14,22 +14,21 @@ public:
 	~Worker() = default;
 
 	void init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn);
-	void setconnfd(const int& connfd);
 
 	Worker(const Worker&) = delete;
 	Worker& operator=(const Worker&) = delete;
 
 	int openFile(const char* filename);
-	void work();
+	void work(const int& connfd, const int& epollfd);
 	void sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type);
 	bool check(MYSQL* conn, const std::string& username, const std::string& pwd);
 
+	//static int epollfd;
+	static int usercount;
 private:
-	char tline[1024] = { '0' };
+	char tline[4096] = { '0' };
 	std::string tstatus;
 	std::string tfile;
-
-	int connfd;
 
 	std::string host, user, pwd, dbname;
 	std::map<const char*, const char*> content_type;

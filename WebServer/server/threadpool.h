@@ -14,9 +14,9 @@ public:
 	ThreadPool(const ThreadPool&) = delete;
 	ThreadPool& operator=(const ThreadPool&) = delete;
 
-	static ThreadPool* getThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum);
+	static ThreadPool* getThreadPool(SqlConnPool* sqlpool, const int& threadnum = 8, const int& maxrequestsnum = 100);
 private:
-	ThreadPool(SqlConnPool *sqlpool,const int& threadnum = 8,const int& maxrequestsnum = 100);
+	ThreadPool(SqlConnPool *sqlpool,const int& threadnum,const int& maxrequestsnum);
 	~ThreadPool();
 
 	static void* worker(void* arg);
@@ -24,8 +24,6 @@ private:
 	bool add(Worker *worker);
 
 	int threadnum, maxrequestsnum;
-
-	bool stop;
 
 	pthread_t* threads;
 

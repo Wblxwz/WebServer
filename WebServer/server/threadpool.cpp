@@ -1,11 +1,11 @@
 
 #include "threadpool.h"
 
-ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum):sqlconnpool(sqlpool),threadnum(threadnum),maxrequestsnum(maxrequestsnum),stop(false),threads(nullptr)
+ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum) :sqlconnpool(sqlpool), threadnum(threadnum), maxrequestsnum(maxrequestsnum), threads(nullptr)
 {
 	sem_init(&sem, 0, 0);
 	assert(threadnum > 0 && maxrequestsnum > 0);
-	
+
 	threads = new pthread_t[threadnum];
 	assert(threads);
 
@@ -26,7 +26,7 @@ ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& ma
 
 ThreadPool* ThreadPool::getThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum)
 {
-	static ThreadPool pool(sqlpool,threadnum, maxrequestsnum);
+	static ThreadPool pool(sqlpool, threadnum, maxrequestsnum);
 	return &pool;
 }
 
@@ -45,13 +45,13 @@ bool ThreadPool::add(Worker* worker)
 
 	//信号量加一，即有任务需要处理
 	sem_post(&sem);
-	
+
 	return true;
 }
 
 void ThreadPool::run()
 {
-	while (!stop)
+	while (true)
 	{
 		sem_wait(&sem);
 		std::unique_lock<std::mutex> locker(mutex);
@@ -68,8 +68,8 @@ void ThreadPool::run()
 
 		if (!request)
 			continue;
-		
-		request->work();
+
+		//request->work();
 	}
 }
 
@@ -82,5 +82,16 @@ void* ThreadPool::worker(void* arg)
 
 ThreadPool::~ThreadPool()
 {
+	std::lock_guard<std::mutex> locker(mutex);
 
+	if (!workerdeque.empty())
+	{
+		for (auto& i : workerdeque)
+		{
+			delete i;
+		}
+	}
+
+	sem_destroy(&sem);
+	delete[]threads;
 }

@@ -3,15 +3,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/sendfile.h>
+#include <sys/epoll.h>
 #include <unistd.h>
 #include <string.h>
 
 #include "worker.h"
 
-void Worker::setconnfd(const int& connfd)
-{
-	this->connfd = connfd;
-}
 
 void Worker::init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
 {
@@ -35,100 +32,122 @@ int Worker::openFile(const char* filename)
 	return fd;
 }
 
-void Worker::work()
+void Worker::work(const int& connfd, const int& epollfd)
 {
-	int len = 0;
+	int len = 0,totle = 0;
 	char buf[4096]{ '0' };
-	char temp[1024]{ '0' };
+	char temp[4096]{ '0' };
 
-	len = recv(connfd, buf, sizeof(buf), NULL);
-
-	int ll = 0;
-	parser.getLine(buf, tline);
-	std::cout << "tline:" << tline << std::endl;
-	parser.getStatus(tline, tstatus);
-	parser.getFile(tline, tfile);
-
-	if (!strcmp(tstatus.c_str(), "GET"))
+	while ((len = recv(connfd, temp, sizeof(temp), NULL)) > 0)
 	{
-		int fd = 0;
-		if (tfile == "")//没有文件请求
+		if (totle + len < sizeof(buf))
 		{
-			//-1让浏览器自行获取长度
-			fd = openFile("home.html");
-			sendResponse(connfd, fd, 200, "OK", content_type["html"]);
+			memcpy(buf + totle, temp, len);
 		}
-		else
-		{
-			fd = openFile(tfile.c_str());
-			std::cout << "tfile:" << tfile << std::endl;
-			//ToDo:favicon.ico发送不能被解析
-			if (tfile.find(".ico") != -1)
-			{
-				std::cout << "123123123" << std::endl;
-				sendResponse(connfd, fd, 200, "OK", content_type["ico"]);
-			}
-			else if (tfile.find(".jfif") != -1)
-			{
-				sendResponse(connfd, fd, 200, "OK", content_type["jpg"]);
-			}
-			else
-			{
-				sendResponse(connfd, fd, 200, "OK", content_type["html"]);
-			}
-			std::cout << tfile << std::endl;
-		}
+		totle += len;
 	}
-	else if (!strcmp(tstatus.c_str(), "POST"))
+	std::cout << "len:" << len << std::endl << "buf:" << buf << std::endl;
+	if (len == -1 && errno == EAGAIN)
 	{
-		//POST请求
-		std::cout << "post tline:" << tline << std::endl;
-		MYSQL* conn = nullptr;
-		connRAII sqlconn(pool, &conn);
-		parser.getInfo(buf, info);
-		sql.useDb(conn);
-		int fd = 0;
-		if (tfile == "signup")
+		//读完后解析
+		int ll = 0;
+		parser.getLine(buf, tline);
+		std::cout << "tline:" << tline << std::endl;
+		parser.getStatus(tline, tstatus);
+		parser.getFile(tline, tfile);
+
+		if (!strcmp(tstatus.c_str(), "GET"))
 		{
-			std::string username = info.getInfo().first;
-			std::string pwd = info.getInfo().second;
-			if (check(conn, username, pwd))
+			int fd = 0;
+			if (tfile == "")//没有文件请求
 			{
+				//-1让浏览器自行获取长度
 				fd = openFile("home.html");
-				sql.insert(conn, username, pwd);
 				sendResponse(connfd, fd, 200, "OK", content_type["html"]);
 			}
 			else
 			{
-				fd = openFile("signuperror.html");
-				sendResponse(connfd, fd, 200, "OK", content_type["html"]);
+				fd = openFile(tfile.c_str());
+				std::cout << "tfile:" << tfile << std::endl;
+				//ToDo:favicon.ico发送不能被解析
+				if (tfile.find(".ico") != -1)
+				{
+					std::cout << "123123123" << std::endl;
+					sendResponse(connfd, fd, 200, "OK", content_type["ico"]);
+				}
+				else if (tfile.find(".jfif") != -1)
+				{
+					sendResponse(connfd, fd, 200, "OK", content_type["jpg"]);
+				}
+				else
+				{
+					sendResponse(connfd, fd, 200, "OK", content_type["html"]);
+				}
+				std::cout << tfile << std::endl;
 			}
 		}
-		else
+		else if (!strcmp(tstatus.c_str(), "POST"))
 		{
-			//login
-			std::string pwd = sql.search(conn, info.getInfo().first);
-			if (pwd.empty())
+			//POST请求
+			std::cout << "post tline:" << tline << std::endl;
+			MYSQL* conn = nullptr;
+			connRAII sqlconn(pool, &conn);
+			parser.getInfo(buf, info);
+			sql.useDb(conn);
+			int fd = 0;
+			if (tfile == "signup")
 			{
-				fd = openFile("loginerror.html");
-				sendResponse(connfd, fd, 200, "OK", content_type["html"]);
-			}
-			else
-			{
-				if (pwd == info.getInfo().second)
+				std::string username = info.getInfo().first;
+				std::string pwd = info.getInfo().second;
+				if (check(conn, username, pwd))
 				{
-					fd = openFile("loginsuccess.html");
+					fd = openFile("home.html");
+					sql.insert(conn, username, pwd);
 					sendResponse(connfd, fd, 200, "OK", content_type["html"]);
 				}
 				else
 				{
-					fd = openFile("loginerror.html");
+					fd = openFile("signuperror.html");
 					sendResponse(connfd, fd, 200, "OK", content_type["html"]);
 				}
 			}
+			else
+			{
+				//login
+				std::string pwd = sql.search(conn, info.getInfo().first);
+				if (pwd.empty())
+				{
+					fd = openFile("loginerror.html");
+					sendResponse(connfd, fd, 200, "OK", content_type["html"]);
+				}
+				else
+				{
+					if (pwd == info.getInfo().second)
+					{
+						fd = openFile("loginsuccess.html");
+						sendResponse(connfd, fd, 200, "OK", content_type["html"]);
+					}
+					else
+					{
+						fd = openFile("loginerror.html");
+						sendResponse(connfd, fd, 200, "OK", content_type["html"]);
+					}
+				}
+			}
 		}
+		//close(connfd);
 	}
-	close(connfd);
+	else if (len == 0)
+	{
+		//客户端断开连接
+		//删除该文件描述符
+		epoll_ctl(epollfd, EPOLL_CTL_DEL, connfd, NULL);
+		close(connfd);
+	}
+	else
+	{
+		abort();
+	}
 }
 
 void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type)

@@ -6,6 +6,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <signal.h>
+#include <sys/epoll.h>
 
 #include <iostream>
 #include <memory>
@@ -15,8 +16,28 @@
 
 void Server::init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
 {
+	sqlpool = SqlConnPool::getSqlConnPool();
+	threadpool = ThreadPool::getThreadPool(sqlpool);
+
+	this->host = host;
+	this->user = user;
+	this->pwd = pwd;
+	this->dbname = dbname;
+	this->sqlport = port;
+	this->maxconn = maxconn;
+
 	worker.init(host, user, pwd, dbname, port, maxconn);
 }
+
+
+void modfd(const int& epollfd, const int& fd, const int& ev)
+{
+	epoll_event event;
+	event.data.fd = fd;
+	event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+	epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
+}
+
 
 void Server::serverListen()
 {
@@ -37,19 +58,61 @@ void Server::serverListen()
 	int ret = bind(listenfd, (sockaddr*)&addr, sizeof(addr));
 	assert(ret >= 0);
 
+	/*Worker* workers = new Worker[65536];
+	epoll_event events[10000];
+	epollfd = epoll_create(5);
+	assert(epollfd != -1);
+
+	addfd(epollfd, listenfd, false);
+	Worker::epollfd = epollfd;*/
+
 	ret = listen(listenfd, 5);
 	assert(ret >= 0);
 
+	int epollfd = epoll_create(5);
+	assert(epollfd != -1);
+	epoll_event events;
+	events.data.fd = listenfd;
+	events.events = EPOLLIN;
+	int n = epoll_ctl(epollfd, EPOLL_CTL_ADD, listenfd, &events);
+	assert(n != -1);
+	epoll_event eve[5];
 	while (true)
 	{
-		sockaddr_in caddr;
-		socklen_t tmplen = sizeof(caddr);
+		//-1即阻塞
+		int num = epoll_wait(epollfd, eve, 5, -1);
+		assert(num != -1);
+		for (int i = 0; i < num; ++i)
+		{
+			int fd = eve[i].data.fd;
+			if (fd == listenfd)
+			{
+				sockaddr_in caddr;
+				socklen_t tmplen = sizeof(caddr);
 
-		//socklen_t作为第三个参数的长度最合适
-		int connfd = accept(listenfd, (sockaddr*)&caddr, &tmplen);
+				//socklen_t作为第三个参数的长度最合适
+				connfd = accept(listenfd, (sockaddr*)&caddr, &tmplen);
+				assert(connfd != -1);
 
-		worker.setconnfd(connfd);
-		worker.work();
+				int flag = fcntl(connfd, F_GETFL);
+				flag |= O_NONBLOCK;
+				fcntl(connfd, F_SETFL, flag);
+
+				epoll_event even;
+				even.data.fd = connfd;
+				even.events = EPOLLIN | EPOLLET;
+				int n = epoll_ctl(epollfd, EPOLL_CTL_ADD, connfd, &even);
+				assert(n != -1);
+			}
+			else
+			{
+				worker.work(eve[i].data.fd, epollfd);
+			}
+		}
+
 	}
+
+	close(epollfd);
 	close(listenfd);
+
 }

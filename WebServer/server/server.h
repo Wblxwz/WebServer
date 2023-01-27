@@ -9,6 +9,7 @@
 #include "http_parse.h"
 #include "sqloperate.h"
 #include "worker.h"
+#include "threadpool.h"
 
 
 class Server
@@ -23,7 +24,13 @@ public:
 	void init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn);
 	void serverListen();
 private:
-	int port;
+	int port, sqlport,maxconn;
 
+	SqlConnPool* sqlpool;
+	ThreadPool* threadpool;
+
+	std::string host, user, pwd, dbname;
+
+	int connfd;
 	Worker worker;
 };
