@@ -21,7 +21,7 @@ public:
 	Server(const Server&) = delete;
 	Server& operator=(const Server&) = delete;
 
-	void init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn);
+	void init(const int& maxconn);
 	void serverListen();
 private:
 	int port, sqlport,maxconn;
@@ -29,7 +29,6 @@ private:
 	SqlConnPool* sqlpool;
 	ThreadPool* threadpool;
 
-	std::string host, user, pwd, dbname;
 
 	int connfd;
 	Worker worker;

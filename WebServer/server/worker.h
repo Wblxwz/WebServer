@@ -13,13 +13,13 @@ public:
 	Worker() = default;
 	~Worker() = default;
 
-	void init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn);
+	void init(const int& connfd,const int& epollfd,const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn);
 
 	Worker(const Worker&) = delete;
 	Worker& operator=(const Worker&) = delete;
 
 	int openFile(const char* filename);
-	void work(const int& connfd, const int& epollfd);
+	void work();
 	void sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type);
 	bool check(MYSQL* conn, const std::string& username, const std::string& pwd);
 
@@ -39,4 +39,5 @@ private:
 	SqlConnPool* pool;
 	Info info;
 
+	int connfd, epollfd;
 };

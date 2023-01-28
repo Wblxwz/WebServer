@@ -14,14 +14,16 @@ public:
 	ThreadPool(const ThreadPool&) = delete;
 	ThreadPool& operator=(const ThreadPool&) = delete;
 
+	bool add(Worker* worker);
+
 	static ThreadPool* getThreadPool(SqlConnPool* sqlpool, const int& threadnum = 8, const int& maxrequestsnum = 100);
 private:
-	ThreadPool(SqlConnPool *sqlpool,const int& threadnum,const int& maxrequestsnum);
+	ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum);
 	~ThreadPool();
 
-	static void* worker(void* arg);
+	static void* worker(void *arg);
 	void run();
-	bool add(Worker *worker);
+
 
 	int threadnum, maxrequestsnum;
 
@@ -32,5 +34,4 @@ private:
 
 	std::deque<Worker*> workerdeque;
 	SqlConnPool* sqlconnpool;
-
 };

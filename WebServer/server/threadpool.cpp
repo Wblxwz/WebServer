@@ -21,6 +21,7 @@ ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& ma
 			delete threads;
 			abort();
 		}
+		std::cout << "thread:" << threadnum << std::endl;
 	}
 }
 
@@ -39,7 +40,7 @@ bool ThreadPool::add(Worker* worker)
 		locker.unlock();
 		return false;
 	}
-
+	
 	workerdeque.push_back(worker);
 	locker.unlock();
 
@@ -69,7 +70,7 @@ void ThreadPool::run()
 		if (!request)
 			continue;
 
-		//request->work();
+		request->work();
 	}
 }
 

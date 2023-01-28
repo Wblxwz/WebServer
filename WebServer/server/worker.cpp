@@ -10,10 +10,13 @@
 #include "worker.h"
 
 
-void Worker::init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
+void Worker::init(const int& connfd, const int& epollfd, const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
 {
 	pool = SqlConnPool::getSqlConnPool();
 	pool->init(host, user, pwd, dbname, port, maxconn);
+
+	this->connfd = connfd;
+	this->epollfd = epollfd;
 
 	content_type["html"] = "text/html; charset=utf-8";
 	content_type["ico"] = "image/x-icon";
@@ -32,7 +35,7 @@ int Worker::openFile(const char* filename)
 	return fd;
 }
 
-void Worker::work(const int& connfd, const int& epollfd)
+void Worker::work()
 {
 	int len = 0,totle = 0;
 	char buf[4096]{ '0' };
@@ -43,10 +46,10 @@ void Worker::work(const int& connfd, const int& epollfd)
 		if (totle + len < sizeof(buf))
 		{
 			memcpy(buf + totle, temp, len);
+			totle += len;
 		}
-		totle += len;
 	}
-	std::cout << "len:" << len << std::endl << "buf:" << buf << std::endl;
+	std::cout << "len:" << len << std::endl;
 	if (len == -1 && errno == EAGAIN)
 	{
 		//¶ÁÍêºó½âÎö

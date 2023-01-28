@@ -14,19 +14,12 @@
 
 #include "server.h"
 
-void Server::init(const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
+void Server::init(const int& maxconn)
 {
 	sqlpool = SqlConnPool::getSqlConnPool();
 	threadpool = ThreadPool::getThreadPool(sqlpool);
 
-	this->host = host;
-	this->user = user;
-	this->pwd = pwd;
-	this->dbname = dbname;
-	this->sqlport = port;
 	this->maxconn = maxconn;
-
-	worker.init(host, user, pwd, dbname, port, maxconn);
 }
 
 
@@ -100,13 +93,15 @@ void Server::serverListen()
 
 				epoll_event even;
 				even.data.fd = connfd;
-				even.events = EPOLLIN | EPOLLET;
+				even.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
 				int n = epoll_ctl(epollfd, EPOLL_CTL_ADD, connfd, &even);
 				assert(n != -1);
 			}
 			else
 			{
-				worker.work(eve[i].data.fd, epollfd);
+				worker.init(eve[i].data.fd, epollfd, "localhost", "root", "a2394559659", "usersdb", 3306, 5);
+				//worker.work();
+				threadpool->add(&worker);
 			}
 		}
 
