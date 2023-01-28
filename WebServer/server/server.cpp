@@ -51,14 +51,6 @@ void Server::serverListen()
 	int ret = bind(listenfd, (sockaddr*)&addr, sizeof(addr));
 	assert(ret >= 0);
 
-	/*Worker* workers = new Worker[65536];
-	epoll_event events[10000];
-	epollfd = epoll_create(5);
-	assert(epollfd != -1);
-
-	addfd(epollfd, listenfd, false);
-	Worker::epollfd = epollfd;*/
-
 	ret = listen(listenfd, 5);
 	assert(ret >= 0);
 
@@ -69,11 +61,12 @@ void Server::serverListen()
 	events.events = EPOLLIN;
 	int n = epoll_ctl(epollfd, EPOLL_CTL_ADD, listenfd, &events);
 	assert(n != -1);
-	epoll_event eve[5];
+	epoll_event eve[10000];
+
 	while (true)
 	{
 		//-1¼´×èÈû
-		int num = epoll_wait(epollfd, eve, 5, -1);
+		int num = epoll_wait(epollfd, eve, 10000, -1);
 		assert(num != -1);
 		for (int i = 0; i < num; ++i)
 		{
@@ -100,7 +93,6 @@ void Server::serverListen()
 			else
 			{
 				worker.init(eve[i].data.fd, epollfd, "localhost", "root", "a2394559659", "usersdb", 3306, 5);
-				//worker.work();
 				threadpool->add(&worker);
 			}
 		}

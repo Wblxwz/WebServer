@@ -21,6 +21,8 @@ void Worker::init(const int& connfd, const int& epollfd, const std::string& host
 	content_type["html"] = "text/html; charset=utf-8";
 	content_type["ico"] = "image/x-icon";
 	content_type["jpg"] = "image/jpeg";
+	content_type["rar"] = "application/octet-stream";
+	content_type["mp4"] = "video/mpeg4";
 }
 
 int Worker::openFile(const char* filename)
@@ -37,7 +39,7 @@ int Worker::openFile(const char* filename)
 
 void Worker::work()
 {
-	int len = 0,totle = 0;
+	int len = 0, totle = 0;
 	char buf[4096]{ '0' };
 	char temp[4096]{ '0' };
 
@@ -72,15 +74,21 @@ void Worker::work()
 			{
 				fd = openFile(tfile.c_str());
 				std::cout << "tfile:" << tfile << std::endl;
-				//ToDo:favicon.ico发送不能被解析
 				if (tfile.find(".ico") != -1)
 				{
-					std::cout << "123123123" << std::endl;
 					sendResponse(connfd, fd, 200, "OK", content_type["ico"]);
 				}
-				else if (tfile.find(".jfif") != -1)
+				else if (tfile.find(".jpg") != -1)
 				{
 					sendResponse(connfd, fd, 200, "OK", content_type["jpg"]);
+				}
+				else if (tfile.find(".rar") != -1)
+				{
+					sendResponse(connfd, fd, 200, "OK", content_type["rar"]);
+				}
+				else if (tfile.find(".mp4") != -1)
+				{
+					sendResponse(connfd, fd, 200, "OK", content_type["mp4"]);
 				}
 				else
 				{
@@ -138,12 +146,11 @@ void Worker::work()
 				}
 			}
 		}
-		//close(connfd);
+		close(connfd);
 	}
 	else if (len == 0)
 	{
-		//客户端断开连接
-		//删除该文件描述符
+		std::cout << "close" << std::endl;
 		epoll_ctl(epollfd, EPOLL_CTL_DEL, connfd, NULL);
 		close(connfd);
 	}
@@ -156,21 +163,30 @@ void Worker::work()
 void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type)
 {
 	char buf[4096]{ '0' };
-	int num = 0;
 
-	num = sprintf(buf, "http/1.1 %d %s\r\n", status, descr);
-	num = sprintf(buf + num, "content-type: %s\r\n", type);
-	sprintf(buf + num + 4, "content-length: %d\r\n\r\n", st.st_size);
+	sprintf(buf, "http/1.1 %d %s\r\n", status, descr);
+	sprintf(buf + strlen(buf), "content-type: %s\r\n", type);
+
+
+	if (tfile.find("mp4") == -1)
+		sprintf(buf + strlen(buf), "content-length: %d\r\n\r\n", st.st_size);
+	else
+	{
+		sprintf(buf + strlen(buf), "content-length: %d\r\n", st.st_size);
+		sprintf(buf + strlen(buf), "accept-ranges: bytes\r\n\r\n");
+	}
 
 	int ret = send(cfd, buf, strlen(buf), 0);
 	assert(ret > 0);
-
 	off_t offset = 0;
 	while (offset < st.st_size)
 	{
-		std::cout << "num:" << sendfile(cfd, fd, &offset, st.st_size) << std::endl;
+		int num = sendfile(cfd, fd, &offset, st.st_size);
+		if (num == -1 && errno != EAGAIN)
+			break;
 	}
 	close(fd);
+
 	std::cout << "sendResponse" << std::endl;
 }
 

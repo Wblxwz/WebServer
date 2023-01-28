@@ -21,7 +21,6 @@ ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& ma
 			delete threads;
 			abort();
 		}
-		std::cout << "thread:" << threadnum << std::endl;
 	}
 }
 
