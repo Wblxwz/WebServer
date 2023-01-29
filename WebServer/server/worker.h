@@ -14,6 +14,7 @@ public:
 	~Worker() = default;
 
 	void init(const int& connfd,const int& epollfd,const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn);
+	void init(const int& connfd, const int& epollfd);
 
 	Worker(const Worker&) = delete;
 	Worker& operator=(const Worker&) = delete;
@@ -25,7 +26,6 @@ public:
 	void updateTime(const int& cfd);
 
 	//static int epollfd;
-	static int usercount;
 private:
 	char tline[4096] = { '0' };
 	std::string tstatus;
@@ -40,5 +40,7 @@ private:
 	SqlConnPool* pool;
 	Info info;
 
-	int connfd, epollfd;
+	int epollfd;
+public:
+	int connfd;
 };

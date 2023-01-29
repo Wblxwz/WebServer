@@ -26,6 +26,11 @@ void Worker::init(const int& connfd, const int& epollfd, const std::string& host
 	content_type["mp4"] = "video/mpeg4";
 }
 
+void Worker::init(const int& connfd, const int& epollfd)
+{
+	this->connfd = connfd;
+	this->epollfd = epollfd;
+}
 
 void Worker::updateTime(const int& cfd)
 {
@@ -35,9 +40,17 @@ void Worker::updateTime(const int& cfd)
 		{
 			time(&cfd->getTime2());
 			cfd->rt2 = cfd->getTime2();
-			std::cout << "time2:" << cfd->getSockfd() << "   " << cfd->rt1 << "   " << cfd->rt2 << std::endl;
+			//std::cout << "time2:" << cfd->getSockfd() << "   " << cfd->rt1 << "   " << cfd->rt2 << std::endl;
 		}
 	}
+}
+
+void modfd(int epollfd, int fd)
+{
+	epoll_event event;
+	event.data.fd = fd;
+	event.events = EPOLLIN | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+	epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
 }
 
 int Worker::openFile(const char* filename)
@@ -45,6 +58,7 @@ int Worker::openFile(const char* filename)
 	//注意此处没有更改tfile的值！
 	filename = parser.questionMark(filename);
 	int fd = open(filename, O_RDONLY);
+	std::cout << "errno" << filename << std::endl;
 	assert(fd >= 0);
 
 	//零拷贝技术
@@ -66,10 +80,12 @@ void Worker::work()
 			totle += len;
 		}
 	}
+	std::cout << "123123123  " << connfd << std::endl;
 	updateTime(connfd);
 	std::cout << "len:" << len << std::endl;
 	if (len == -1 && errno == EAGAIN)
 	{
+		modfd(epollfd, connfd);
 		//读完后解析
 		int ll = 0;
 		parser.getLine(buf, tline);
@@ -110,7 +126,7 @@ void Worker::work()
 				{
 					sendResponse(connfd, fd, 200, "OK", content_type["html"]);
 				}
-				std::cout << tfile << std::endl;
+				//std::cout << tfile << std::endl;
 			}
 		}
 		else if (!strcmp(tstatus.c_str(), "POST"))
@@ -172,7 +188,8 @@ void Worker::work()
 	}
 	else
 	{
-		abort();
+		std::cout << "asdasdasd" << errno << std::endl;
+		//abort();
 	}
 }
 
@@ -193,7 +210,11 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 	}
 
 	int ret = send(cfd, buf, strlen(buf), 0);
-	assert(ret > 0);
+
+	if (ret <= 0)
+	{
+		std::cout << "errnosend:" << errno << std::endl;
+	}
 	off_t offset = 0;
 	while (offset < st.st_size)
 	{
@@ -201,6 +222,7 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 		if (num == -1 && errno != EAGAIN)
 			break;
 	}
+
 	updateTime(connfd);
 	close(fd);
 

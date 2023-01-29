@@ -5,6 +5,7 @@
 const int HttpParser::getLine(const char* c, char* tline)
 {
 	int i = 0;
+	std::cout << "asd" << c << std::endl;
 	while (c[i] != '\n')
 	{
 		tline[i] = c[i];
@@ -41,6 +42,10 @@ const int HttpParser::getFile(const std::string& tline, std::string& tfile)
 	if (pos == -1)
 	{
 		int pos1 = tline.find("/"), pos2 = tline.find("HTTP/1.1");
+		if (pos2 == -1)
+		{
+			pos2 = tline.find("HTTP/1.0");
+		}
 		tfile = tline.substr(pos1 + 1, pos2 - pos1 - 2);
 		return pos2 - pos1 - 3;
 	}

@@ -24,11 +24,11 @@ public:
 
 	void init(const int& maxconn);
 	void serverListen();
-	void addFd(const int& epollfd, const int& fd,bool ONESHOT);
+	void addFd(const int& epollfd, const int& fd, bool ONESHOT);
 	void setNoblock(const int& fd);
 	void timeoutHandler();
 private:
-	int port, sqlport,maxconn, connfd;
+	int port, sqlport, maxconn, connfd, sqlcnt = 0;
 	int pipe[2];
 
 	SqlConnPool* sqlpool;

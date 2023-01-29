@@ -32,6 +32,7 @@ void Server::addFd(const int& epollfd, const int& fd, bool ONESHOT)
 	events.events = EPOLLIN | EPOLLET | EPOLLHUP;
 	if (ONESHOT)
 		events.events |= EPOLLONESHOT;
+	setNoblock(fd);
 	assert(epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &events) != -1);
 }
 
@@ -46,11 +47,9 @@ void Server::timeoutHandler()
 {
 	for (auto& timer : timers)
 	{
-		if (timer->getTime2() - timer->getTime1() > 3)
-		{
-			std::cout << "6666666" << std::endl;
-		}
+		std::cout << "555555" << timer->getSockfd() << std::endl;
 	}
+	std::cout << "6666666" << timers.size() << std::endl;
 	alarm(15);
 }
 
@@ -124,10 +123,9 @@ void Server::serverListen()
 				Timer timer(connfd);
 				time(&(timer.getTime1()));
 				timer.rt1 = timer.getTime1();
-				std::cout << "time1:" << timer.getSockfd() << "   " << timer.rt1 << "   " << timer.rt2 << std::endl;
+				//std::cout << "time1:" << timer.getSockfd() << "   " << timer.rt1 << "   " << timer.rt2 << std::endl;
 				timers.push_back(&timer);
 
-				setNoblock(connfd);
 				addFd(epollfd, connfd, true);
 			}
 			else if ((fd == pipe[0]) && (eve[i].events & EPOLLIN))
@@ -164,8 +162,15 @@ void Server::serverListen()
 			}
 			else
 			{
-				worker.init(eve[i].data.fd, epollfd,"localhost", "root", "a2394559659", "usersdb", 3306, 5);
+				if (sqlcnt == 0)
+				{
+					worker.init(eve[i].data.fd, epollfd, "localhost", "root", "a2394559659", "usersdb", 3306, 5);
+					++sqlcnt;
+				}
+				else
+					worker.init(eve[i].data.fd, epollfd);
 				threadpool->add(&worker);
+				//worker.work();
 			}
 		}
 		if (timeout)

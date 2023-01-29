@@ -23,7 +23,8 @@ void SqlConnPool::init(const std::string& host, const std::string& user, const s
 		con = mysql_init(con);
 		assert(con);
 		con = mysql_real_connect(con, host.c_str(), user.c_str(), pwd.c_str(), dbname.c_str(), port, NULL, 0);
-		assert(con);
+		if (!con)
+			std::cout << "sqlError" << std::endl;
 		connDeque.push_back(con);
 		++freecon;
 	}
