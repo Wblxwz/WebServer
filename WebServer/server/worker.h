@@ -22,6 +22,7 @@ public:
 	void work();
 	void sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type);
 	bool check(MYSQL* conn, const std::string& username, const std::string& pwd);
+	void updateTime(const int& cfd);
 
 	//static int epollfd;
 	static int usercount;

@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "worker.h"
+#include "server.h"
 
 
 void Worker::init(const int& connfd, const int& epollfd, const std::string& host, const std::string& user, const std::string& pwd, const std::string& dbname, const int& port, const int& maxconn)
@@ -23,6 +24,20 @@ void Worker::init(const int& connfd, const int& epollfd, const std::string& host
 	content_type["jpg"] = "image/jpeg";
 	content_type["rar"] = "application/octet-stream";
 	content_type["mp4"] = "video/mpeg4";
+}
+
+
+void Worker::updateTime(const int& cfd)
+{
+	for (auto& cfd : Server::timers)
+	{
+		if (cfd->getSockfd() == connfd)
+		{
+			time(&cfd->getTime2());
+			cfd->rt2 = cfd->getTime2();
+			std::cout << "time2:" << cfd->getSockfd() << "   " << cfd->rt1 << "   " << cfd->rt2 << std::endl;
+		}
+	}
 }
 
 int Worker::openFile(const char* filename)
@@ -51,6 +66,7 @@ void Worker::work()
 			totle += len;
 		}
 	}
+	updateTime(connfd);
 	std::cout << "len:" << len << std::endl;
 	if (len == -1 && errno == EAGAIN)
 	{
@@ -185,6 +201,7 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 		if (num == -1 && errno != EAGAIN)
 			break;
 	}
+	updateTime(connfd);
 	close(fd);
 
 	std::cout << "sendResponse" << std::endl;
