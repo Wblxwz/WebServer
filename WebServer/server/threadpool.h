@@ -16,7 +16,7 @@ public:
 
 	bool add(Worker* worker);
 
-	static ThreadPool* getThreadPool(SqlConnPool* sqlpool, const int& threadnum = 1, const int& maxrequestsnum = 100);
+	static ThreadPool* getThreadPool(SqlConnPool* sqlpool, const int& threadnum = 8, const int& maxrequestsnum = 100);
 private:
 	ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum);
 	~ThreadPool();

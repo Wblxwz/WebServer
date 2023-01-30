@@ -29,7 +29,7 @@ void Server::addFd(const int& epollfd, const int& fd, bool ONESHOT)
 {
 	epoll_event events;
 	events.data.fd = fd;
-	events.events = EPOLLIN | EPOLLET | EPOLLHUP;
+	events.events = EPOLLIN | EPOLLET;
 	if (ONESHOT)
 		events.events |= EPOLLONESHOT;
 	setNoblock(fd);
@@ -47,9 +47,12 @@ void Server::timeoutHandler()
 {
 	for (auto& timer : timers)
 	{
-		std::cout << "555555" << timer->getSockfd() << std::endl;
+		if (timer->getTime2() - timer->getTime1() > 15)
+		{
+			close(timer->getSockfd());
+			//timers.erase(timers.);
+		}
 	}
-	std::cout << "6666666" << timers.size() << std::endl;
 	alarm(15);
 }
 
@@ -68,6 +71,7 @@ void Server::serverListen()
 	//¶Ë¿Ú¸´ÓÃ
 	int tmp = 1;
 	setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &tmp, sizeof(tmp));
+	setsockopt(listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
 
 	int ret = bind(listenfd, (sockaddr*)&addr, sizeof(addr));
 	assert(ret >= 0);
@@ -123,7 +127,6 @@ void Server::serverListen()
 				Timer timer(connfd);
 				time(&(timer.getTime1()));
 				timer.rt1 = timer.getTime1();
-				//std::cout << "time1:" << timer.getSockfd() << "   " << timer.rt1 << "   " << timer.rt2 << std::endl;
 				timers.push_back(&timer);
 
 				addFd(epollfd, connfd, true);
@@ -169,8 +172,8 @@ void Server::serverListen()
 				}
 				else
 					worker.init(eve[i].data.fd, epollfd);
-				threadpool->add(&worker);
-				//worker.work();
+				//threadpool->add(&worker);
+				worker.work();
 			}
 		}
 		if (timeout)
@@ -182,6 +185,6 @@ void Server::serverListen()
 
 	close(epollfd);
 	close(listenfd);
-
+	
 }
 

@@ -1,7 +1,7 @@
 
 #include "threadpool.h"
 
-ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum = 1, const int& maxrequestsnum = 100) :sqlconnpool(sqlpool), threadnum(threadnum), maxrequestsnum(maxrequestsnum), threads(nullptr)
+ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum = 8, const int& maxrequestsnum = 100) :sqlconnpool(sqlpool), threadnum(threadnum), maxrequestsnum(maxrequestsnum), threads(nullptr)
 {
 	sem_init(&sem, 0, 0);
 	assert(threadnum > 0 && maxrequestsnum > 0);
@@ -55,7 +55,6 @@ void ThreadPool::run()
 	{
 		sem_wait(&sem);
 		std::unique_lock<std::mutex> locker(mutex);
-
 
 		if (workerdeque.empty())
 		{

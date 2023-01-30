@@ -45,11 +45,11 @@ void Worker::updateTime(const int& cfd)
 	}
 }
 
-void modfd(int epollfd, int fd)
+void modfd(const int& epollfd,const int& fd)
 {
 	epoll_event event;
 	event.data.fd = fd;
-	event.events = EPOLLIN | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+	event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
 	epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
 }
 
@@ -58,7 +58,7 @@ int Worker::openFile(const char* filename)
 	//注意此处没有更改tfile的值！
 	filename = parser.questionMark(filename);
 	int fd = open(filename, O_RDONLY);
-	std::cout << "errno" << filename << std::endl;
+	std::cout << "filename: " << filename << std::endl;
 	assert(fd >= 0);
 
 	//零拷贝技术
@@ -80,12 +80,11 @@ void Worker::work()
 			totle += len;
 		}
 	}
-	std::cout << "123123123  " << connfd << std::endl;
 	updateTime(connfd);
-	std::cout << "len:" << len << std::endl;
-	if (len == -1 && errno == EAGAIN)
+	std::string s(buf);
+	if (len == -1 && errno == EAGAIN && s != "0")
 	{
-		modfd(epollfd, connfd);
+		//modfd(epollfd, connfd);
 		//读完后解析
 		int ll = 0;
 		parser.getLine(buf, tline);
@@ -178,17 +177,18 @@ void Worker::work()
 				}
 			}
 		}
+		//std::cout << "close:" << connfd << std::endl;
 		close(connfd);
 	}
 	else if (len == 0)
 	{
-		std::cout << "close" << std::endl;
+		std::cout << "close" << connfd << std::endl;
 		epoll_ctl(epollfd, EPOLL_CTL_DEL, connfd, NULL);
 		close(connfd);
 	}
 	else
 	{
-		std::cout << "asdasdasd" << errno << std::endl;
+		std::cout << "errno:" << errno << " " << connfd << std::endl;
 		//abort();
 	}
 }
@@ -222,7 +222,6 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 		if (num == -1 && errno != EAGAIN)
 			break;
 	}
-
 	updateTime(connfd);
 	close(fd);
 

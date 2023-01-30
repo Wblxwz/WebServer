@@ -5,7 +5,6 @@
 const int HttpParser::getLine(const char* c, char* tline)
 {
 	int i = 0;
-	std::cout << "asd" << c << std::endl;
 	while (c[i] != '\n')
 	{
 		tline[i] = c[i];
