@@ -16,9 +16,9 @@ public:
 
 	bool add(Worker* worker);
 
-	static ThreadPool* getThreadPool(SqlConnPool* sqlpool, const int& threadnum = 8, const int& maxrequestsnum = 100);
+	static ThreadPool* getThreadPool(const int& threadnum = 8, const int& maxrequestsnum = 10000);
 private:
-	ThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum);
+	ThreadPool(const int& threadnum, const int& maxrequestsnum);
 	~ThreadPool();
 
 	static void* worker(void *arg);
@@ -33,5 +33,4 @@ private:
 	sem_t sem;
 
 	std::deque<Worker*> workerdeque;
-	SqlConnPool* sqlconnpool;
 };

@@ -4,6 +4,7 @@
 
 const int HttpParser::getLine(const char* c, char* tline)
 {
+
 	int i = 0;
 	while (c[i] != '\n')
 	{

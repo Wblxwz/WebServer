@@ -1,7 +1,7 @@
 
 #include "threadpool.h"
 
-ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum = 8, const int& maxrequestsnum = 100) :sqlconnpool(sqlpool), threadnum(threadnum), maxrequestsnum(maxrequestsnum), threads(nullptr)
+ThreadPool::ThreadPool(const int& threadnum = 8, const int& maxrequestsnum = 10000) : threadnum(threadnum), maxrequestsnum(maxrequestsnum), threads(nullptr)
 {
 	sem_init(&sem, 0, 0);
 	assert(threadnum > 0 && maxrequestsnum > 0);
@@ -24,9 +24,9 @@ ThreadPool::ThreadPool(SqlConnPool* sqlpool, const int& threadnum = 8, const int
 	}
 }
 
-ThreadPool* ThreadPool::getThreadPool(SqlConnPool* sqlpool, const int& threadnum, const int& maxrequestsnum)
+ThreadPool* ThreadPool::getThreadPool(const int& threadnum, const int& maxrequestsnum)
 {
-	static ThreadPool pool(sqlpool, threadnum, maxrequestsnum);
+	static ThreadPool pool(threadnum, maxrequestsnum);
 	return &pool;
 }
 
@@ -69,7 +69,6 @@ void ThreadPool::run()
 		if (!request)
 			continue;
 
-		std::cout << "work: " << request->connfd << std::endl;
 		request->work();
 	}
 }

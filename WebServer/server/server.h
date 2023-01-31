@@ -10,8 +10,6 @@
 #include "sqloperate.h"
 #include "worker.h"
 #include "threadpool.h"
-#include "signal.h"
-#include "timer.h"
 
 class Server
 {
@@ -24,17 +22,11 @@ public:
 
 	void init(const int& maxconn);
 	void serverListen();
-	void addFd(const int& epollfd, const int& fd, bool ONESHOT);
+	void addFd(const int& epollfd, const int& fd, bool SHOT);
 	void setNoblock(const int& fd);
-	void timeoutHandler();
 private:
 	int port, sqlport, maxconn, connfd, sqlcnt = 0;
-	int pipe[2];
 
 	SqlConnPool* sqlpool;
 	ThreadPool* threadpool;
-	Worker worker;
-	Signal signal;
-public:
-	static std::list<Timer*> timers;
 };

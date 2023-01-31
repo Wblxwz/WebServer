@@ -15,22 +15,21 @@
 
 #include "server.h"
 
-std::list<Timer*> Server::timers;
-
 void Server::init(const int& maxconn)
 {
 	sqlpool = SqlConnPool::getSqlConnPool();
-	threadpool = ThreadPool::getThreadPool(sqlpool);
+	sqlpool->init("localhost", "root", "a2394559659", "usersdb", 3306, 5);
+	threadpool = ThreadPool::getThreadPool();
 
 	this->maxconn = maxconn;
 }
 
-void Server::addFd(const int& epollfd, const int& fd, bool ONESHOT)
+void Server::addFd(const int& epollfd, const int& fd, bool SHOT)
 {
 	epoll_event events;
 	events.data.fd = fd;
-	events.events = EPOLLIN | EPOLLET;
-	if (ONESHOT)
+	events.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+	if (SHOT)
 		events.events |= EPOLLONESHOT;
 	setNoblock(fd);
 	assert(epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &events) != -1);
@@ -39,21 +38,9 @@ void Server::addFd(const int& epollfd, const int& fd, bool ONESHOT)
 void Server::setNoblock(const int& fd)
 {
 	int flag = fcntl(fd, F_GETFL);
+	assert(flag >= 0);
 	flag |= O_NONBLOCK;
-	fcntl(fd, F_SETFL, flag);
-}
-
-void Server::timeoutHandler()
-{
-	for (auto& timer : timers)
-	{
-		if (timer->getTime2() - timer->getTime1() > 15)
-		{
-			close(timer->getSockfd());
-			//timers.erase(timers.);
-		}
-	}
-	alarm(15);
+	assert(fcntl(fd, F_SETFL, flag) >= 0);
 }
 
 void Server::serverListen()
@@ -81,38 +68,13 @@ void Server::serverListen()
 
 	int epollfd = epoll_create(5);
 	assert(epollfd != -1);
-	epoll_event events;
-	events.data.fd = listenfd;
-	events.events = EPOLLIN;
-	int n = epoll_ctl(epollfd, EPOLL_CTL_ADD, listenfd, &events);
-	assert(n != -1);
+	addFd(epollfd, listenfd, false);
 	epoll_event eve[10000];
 
-	Signal::pipefd = pipe;
-	int retval = socketpair(PF_UNIX, SOCK_STREAM, 0, pipe);
-	assert(retval != -1);
-	//pipe[1]写端
-	setNoblock(pipe[1]);
-	addFd(epollfd, pipe[0], false);
-	//到时信号
-	signal.addSig(SIGALRM, signal.sigHandler, false);
-	//kill信号
-	signal.addSig(SIGTERM, signal.sigHandler, false);
-	//每隔15s发送SIGALRM信号到当前进程
-	alarm(15);
-	bool timeout = false;
-	bool stopserver = false;
-
-	while (!stopserver)
+	while (true)
 	{
 		//-1即阻塞
 		int num = epoll_wait(epollfd, eve, 10000, -1);
-		//errno = EINTR即阻塞被信号中断，是允许的
-		if (num < 0 && errno != EINTR)
-		{
-			std::cout << "Error" << errno << std::endl;
-			break;
-		}
 		for (int i = 0; i < num; ++i)
 		{
 			int fd = eve[i].data.fd;
@@ -121,70 +83,38 @@ void Server::serverListen()
 				sockaddr_in caddr;
 				socklen_t tmplen = sizeof(caddr);
 
-				//socklen_t作为第三个参数的长度最合适
-				connfd = accept(listenfd, (sockaddr*)&caddr, &tmplen);
-				assert(connfd != -1);
-				Timer timer(connfd);
-				time(&(timer.getTime1()));
-				timer.rt1 = timer.getTime1();
-				timers.push_back(&timer);
-
-				addFd(epollfd, connfd, true);
-			}
-			else if ((fd == pipe[0]) && (eve[i].events & EPOLLIN))
-			{
-				int sig;
-				char signals[1024];
-
-				int rtval = recv(pipe[0], signals, sizeof(signals), 0);
-				if (rtval == -1)
-					continue;
-				else if (rtval == 0)
-					continue;
-				else
+				while (true)
 				{
-					for (int i = 0; i < rtval; ++i)
+					connfd = accept(listenfd, (sockaddr*)&caddr, &tmplen);
+					if (connfd < 0)
 					{
-						switch (signals[i])
-						{
-						case SIGALRM:
-						{
-							timeout = true;
-							break;
-						}
-						case SIGTERM:
-						{
-							stopserver = true;
-							break;
-						}
-						default:
-							break;
-						}
+						break;
 					}
+					addFd(epollfd, connfd, true);
 				}
+				continue;
 			}
-			else
+			else if (eve[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 			{
-				if (sqlcnt == 0)
-				{
-					worker.init(eve[i].data.fd, epollfd, "localhost", "root", "a2394559659", "usersdb", 3306, 5);
-					++sqlcnt;
-				}
-				else
-					worker.init(eve[i].data.fd, epollfd);
-				//threadpool->add(&worker);
-				worker.work();
+				printf("ERRORHUP\n");
+				epoll_ctl(epollfd, EPOLL_CTL_DEL, eve[i].data.fd, 0);
+				close(eve[i].data.fd);
 			}
-		}
-		if (timeout)
-		{
-			timeoutHandler();
-			timeout = false;
+			else if (eve[i].events & EPOLLIN)
+			{
+				Worker *worker = new Worker;
+				worker->init(eve[i].data.fd, epollfd);
+				threadpool->add(worker);
+			}
+			else if (eve[i].events & EPOLLOUT)
+			{
+				
+			}
 		}
 	}
 
 	close(epollfd);
 	close(listenfd);
-	
+
 }
 
