@@ -108,7 +108,7 @@ void Server::serverListen()
 			}
 			else if (eve[i].events & EPOLLOUT)
 			{
-				
+
 			}
 		}
 	}

@@ -19,15 +19,13 @@ public:
 	Worker& operator=(const Worker&) = delete;
 
 	int openFile(const char* filename);
-	void read();
-	void write();
 	void work();
 	void sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type);
 	bool check(MYSQL* conn, const std::string& username, const std::string& pwd);
 
-	//static int epollfd;
 private:
 	char tline[4096] = { '0' };
+	char* address;
 	std::string tstatus;
 	std::string tfile;
 
@@ -41,7 +39,5 @@ private:
 	Info info;
 
 	int epollfd;
-	bool canwrite = false;
-public:
 	int connfd;
 };

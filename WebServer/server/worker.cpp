@@ -6,6 +6,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/mman.h>
 
 #include "worker.h"
 #include "server.h"
@@ -37,17 +38,11 @@ int Worker::openFile(const char* filename)
 	//注意此处没有更改tfile的值！
 	filename = parser.questionMark(filename);
 	int fd = open(filename, O_RDONLY);
-	std::cout << "filename: " << filename << std::endl;
-	assert(fd >= 0);
-
+	std::cout << "filename: " << filename << errno << std::endl;
+	assert(fd >= 0);	
 	//零拷贝技术
 	fstat(fd, &st);
 	return fd;
-}
-
-void deletefd(const int& epollfd, const int& connfd)
-{
-	epoll_ctl(epollfd, EPOLL_CTL_DEL, connfd, 0);
 }
 
 void Worker::work()
@@ -74,12 +69,11 @@ void Worker::work()
 		}
 	}
 	modfd(epollfd, connfd);
-	//读完后解析
+
 	parser.getLine(buf, tline);
 	std::cout << "tline:" << tline << std::endl;
 	parser.getStatus(tline, tstatus);
 	parser.getFile(tline, tfile);
-	canwrite = true;
 	if (!strcmp(tstatus.c_str(), "GET"))
 	{
 		int fd = 0;
@@ -184,11 +178,6 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 	}
 
 	int ret = send(cfd, buf, strlen(buf), 0);
-
-	if (ret <= 0)
-	{
-		std::cout << "errnosend:" << errno << std::endl;
-	}
 	off_t offset = 0;
 	while (offset < st.st_size)
 	{
@@ -202,11 +191,11 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 			epoll_event e;
 			e.data.fd = cfd;
 			e.events = EPOLLOUT | EPOLLET | EPOLLRDHUP | EPOLLONESHOT;
-			epoll_ctl(epollfd, EPOLL_CTL_MOD, cfd, &e);
+			int n = epoll_ctl(epollfd, EPOLL_CTL_MOD, cfd, &e);
 			break;
 		}
 	}
-
+	//ToDo:多线程下关闭速度较慢
 	close(fd);
 
 	std::cout << "sendResponse" << std::endl;

@@ -70,6 +70,7 @@ void ThreadPool::run()
 			continue;
 
 		request->work();
+		delete request;
 	}
 }
 

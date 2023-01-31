@@ -11,6 +11,7 @@
 #include "worker.h"
 #include "threadpool.h"
 
+
 class Server
 {
 public:
@@ -24,6 +25,7 @@ public:
 	void serverListen();
 	void addFd(const int& epollfd, const int& fd, bool SHOT);
 	void setNoblock(const int& fd);
+
 private:
 	int port, sqlport, maxconn, connfd, sqlcnt = 0;
 
