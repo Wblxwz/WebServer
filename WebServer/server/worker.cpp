@@ -166,9 +166,10 @@ void Worker::work()
 			}
 		}
 	}
-	//close(connfd);
+	std::string tmpline(tline);
+	if (tmpline.find("HTTP/1.0") != -1)
+		close(connfd);
 }
-
 void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type)
 {
 	char buf[4096]{ '0' };
