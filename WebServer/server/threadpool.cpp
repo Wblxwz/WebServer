@@ -68,9 +68,10 @@ void ThreadPool::run()
 
 		if (!request)
 			continue;
-
+		
+		std::cout << "work:" << request->getConnfd() << std::endl;
 		request->work();
-		delete request;
+		//delete request;
 	}
 }
 

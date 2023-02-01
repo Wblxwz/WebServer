@@ -15,6 +15,8 @@
 
 #include "server.h"
 
+int Server::pipe[];
+
 void Server::init(const int& maxconn)
 {
 	sqlpool = SqlConnPool::getSqlConnPool();
@@ -43,6 +45,31 @@ void Server::setNoblock(const int& fd)
 	assert(fcntl(fd, F_SETFL, flag) >= 0);
 }
 
+void Server::clearall(const int& connfd)
+{
+	std::cout << "close:" << connfd << "  " << errno << std::endl;
+	epoll_ctl(epollfd, EPOLL_CTL_DEL, connfd, 0);
+	auto it = workers.find(connfd);
+	delete it->second;
+	workers.erase(it);
+	close(connfd);
+}
+
+void Server::timeoutHandler()
+{
+	time(&mytime);
+	for (auto i = workers.cbegin(); i != workers.cend(); ++i)
+	{
+		if (mytime - i->second->getTime() > 15)
+		{
+			int confd = i->first;
+			clearall(confd);
+		}
+	}
+	//alarm只触发一次
+	alarm(5);
+}
+
 void Server::serverListen()
 {
 	//protocol为0自动选择type类型对应的默认协议
@@ -66,15 +93,28 @@ void Server::serverListen()
 	ret = listen(listenfd, 5);
 	assert(ret >= 0);
 
-	int epollfd = epoll_create(5);
+	epollfd = epoll_create(5);
 	assert(epollfd != -1);
 	addFd(epollfd, listenfd, false);
 	epoll_event eve[10000];
 
-	while (true)
+	int retval = socketpair(PF_UNIX, SOCK_STREAM, 0, pipe);
+	setNoblock(pipe[1]);
+	addFd(epollfd, pipe[0], false);
+	signal.addSig(SIGALRM, Signal::sigHandler, false);
+	signal.addSig(SIGTERM, Signal::sigHandler, false);
+
+	bool stop = false;
+	bool timeout = false;
+
+	alarm(5);
+
+	while (!stop)
 	{
 		//-1即阻塞
 		int num = epoll_wait(epollfd, eve, 10000, -1);
+		if (num < 0 && errno != EINTR)
+			break;
 		for (int i = 0; i < num; ++i)
 		{
 			int fd = eve[i].data.fd;
@@ -91,25 +131,69 @@ void Server::serverListen()
 						break;
 					}
 					addFd(epollfd, connfd, true);
+					Worker* worker = new Worker;
+					worker->init(connfd, epollfd);
+					time(&(worker->getTime()));
+					workers[connfd] = worker;
 				}
 				continue;
 			}
 			else if (eve[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 			{
 				printf("ERRORHUP\n");
-				epoll_ctl(epollfd, EPOLL_CTL_DEL, eve[i].data.fd, 0);
-				close(eve[i].data.fd);
+				clearall(eve[i].data.fd);
+			}
+			else if ((eve[i].data.fd == pipe[0]) && (eve[i].events & EPOLLIN))
+			{
+				int sig;
+				char signals[1024];
+				int ret = recv(pipe[0], signals, sizeof(signals), 0);
+				if (ret == -1)
+				{
+					std::cout << "pipeError" << errno << std::endl;
+					continue;
+				}
+				else if (ret == 0)
+					continue;
+				else
+				{
+					for (int i = 0; i < ret; ++i)
+					{
+						switch (signals[i])
+						{
+						case SIGALRM:
+						{
+							timeout = true;
+							break;
+						}
+						case SIGTERM:
+						{
+							stop = true;
+							break;
+						}
+						default:
+							break;
+						}
+					}
+				}
 			}
 			else if (eve[i].events & EPOLLIN)
 			{
-				Worker *worker = new Worker;
-				worker->init(eve[i].data.fd, epollfd);
+				Worker* worker = workers[eve[i].data.fd];
+				Workerlist.push_back(worker);
 				threadpool->add(worker);
 			}
 			else if (eve[i].events & EPOLLOUT)
 			{
-
+				std::cout << "EPOLLOUT" << std::endl;
+				/*Worker* worker = workers[eve[i].data.fd];
+				threadpool->add(worker);*/
 			}
+		}
+		if (timeout)
+		{
+			timeoutHandler();
+			timeout = false;
 		}
 	}
 

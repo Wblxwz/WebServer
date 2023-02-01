@@ -12,7 +12,5 @@ public:
 	static void sigHandler(int sig);
 	//ÉèÖÃĞÅºÅº¯Êı
 	void addSig(const int& sig, void (*handler)(int), bool restart = true);
-public:
-	static int* pipefd;
 };
 

@@ -24,6 +24,10 @@ void Worker::init(const int& connfd, const int& epollfd)
 	content_type["mp4"] = "video/mpeg4";
 }
 
+time_t& Worker::getTime()
+{
+	return this->timer;
+}
 
 void modfd(const int& epollfd, const int& fd)
 {
@@ -37,12 +41,17 @@ int Worker::openFile(const char* filename)
 {
 	//注意此处没有更改tfile的值！
 	filename = parser.questionMark(filename);
-	int fd = open(filename, O_RDONLY);
+	fd = open(filename, O_RDONLY);
 	std::cout << "filename: " << filename << errno << std::endl;
-	assert(fd >= 0);	
+	assert(fd >= 0);
 	//零拷贝技术
 	fstat(fd, &st);
 	return fd;
+}
+
+const int& Worker::getConnfd()
+{
+	return connfd;
 }
 
 void Worker::work()
@@ -60,7 +69,6 @@ void Worker::work()
 		else if (len == 0)
 		{
 			std::cout << "errno:" << errno << " " << connfd << std::endl;
-			//modfd(epollfd, connfd);
 		}
 		if (totle + len < sizeof(buf))
 		{
@@ -158,7 +166,7 @@ void Worker::work()
 			}
 		}
 	}
-	close(connfd);
+	//close(connfd);
 }
 
 void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type)
@@ -178,23 +186,15 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 	}
 
 	int ret = send(cfd, buf, strlen(buf), 0);
+	//ToDo:EPOLLOUT
 	off_t offset = 0;
 	while (offset < st.st_size)
 	{
 		if (st.st_size == 0)
-		{
 			modfd(epollfd, connfd);
-		}
-		int num = sendfile(cfd, fd, &offset, st.st_size);
-		if (num < 0 && errno == EAGAIN)
-		{
-			epoll_event e;
-			e.data.fd = cfd;
-			e.events = EPOLLOUT | EPOLLET | EPOLLRDHUP | EPOLLONESHOT;
-			int n = epoll_ctl(epollfd, EPOLL_CTL_MOD, cfd, &e);
-			break;
-		}
+		sendfile(connfd, fd, &offset, st.st_size);
 	}
+	time(&timer);
 	//ToDo:多线程下关闭速度较慢
 	close(fd);
 
@@ -207,4 +207,9 @@ bool Worker::check(MYSQL* conn, const std::string& username, const std::string& 
 	if (username.size() > 12 || pwd.size() > 16 || !sql.check(conn, username))
 		return false;
 	return true;
+}
+
+bool Worker::getIswrite()
+{
+	return iswrite;
 }
