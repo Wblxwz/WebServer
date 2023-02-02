@@ -1,7 +1,7 @@
 
 #include "threadpool.h"
 
-ThreadPool::ThreadPool(const int& threadnum = 8, const int& maxrequestsnum = 10000) : threadnum(threadnum), maxrequestsnum(maxrequestsnum), threads(nullptr)
+ThreadPool::ThreadPool(const int& threadnum, const int& maxrequestsnum) : threadnum(threadnum), maxrequestsnum(maxrequestsnum), threads(nullptr)
 {
 	sem_init(&sem, 0, 0);
 	assert(threadnum > 0 && maxrequestsnum > 0);
@@ -69,9 +69,7 @@ void ThreadPool::run()
 		if (!request)
 			continue;
 		
-		std::cout << "work:" << request->getConnfd() << std::endl;
 		request->work();
-		//delete request;
 	}
 }
 

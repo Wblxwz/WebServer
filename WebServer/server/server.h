@@ -13,6 +13,7 @@
 #include "threadpool.h"
 #include "signal.h"
 
+//类内定义函数自动inline
 class Server
 {
 public:
@@ -24,8 +25,8 @@ public:
 
 	void init(const int& maxconn);
 	void serverListen();
-	void addFd(const int& epollfd, const int& fd, bool SHOT);
-	void setNoblock(const int& fd);
+	inline void addFd(const int& epollfd, const int& fd, bool SHOT);
+	inline void setNoblock(const int& fd);
 	void timeoutHandler();
 
 private:

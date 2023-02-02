@@ -4,6 +4,7 @@
 #include <map>
 #include <ctime>
 
+#include "log.h"
 #include "connRAII.h"
 #include "sqloperate.h"
 #include "http_parse.h"
@@ -23,6 +24,7 @@ public:
 
 	int openFile(const char* filename);
 	void work();
+	const char* getHost(const char* buf);
 	void sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type);
 	bool check(MYSQL* conn, const std::string& username, const std::string& pwd);
 	bool getIswrite();

@@ -42,7 +42,6 @@ int Worker::openFile(const char* filename)
 	//注意此处没有更改tfile的值！
 	filename = parser.questionMark(filename);
 	fd = open(filename, O_RDONLY);
-	std::cout << "filename: " << filename << errno << std::endl;
 	assert(fd >= 0);
 	//零拷贝技术
 	fstat(fd, &st);
@@ -68,7 +67,8 @@ void Worker::work()
 		}
 		else if (len == 0)
 		{
-			std::cout << "errno:" << errno << " " << connfd << std::endl;
+			LOG_ERROR("Errno:%d", errno);
+			LOG_ERROR("Connfd:%d", connfd);
 		}
 		if (totle + len < sizeof(buf))
 		{
@@ -78,8 +78,8 @@ void Worker::work()
 	}
 	modfd(epollfd, connfd);
 
+	LOG_INFO("Host:%s", getHost(buf));
 	parser.getLine(buf, tline);
-	std::cout << "tline:" << tline << std::endl;
 	parser.getStatus(tline, tstatus);
 	parser.getFile(tline, tfile);
 	if (!strcmp(tstatus.c_str(), "GET"))
@@ -94,7 +94,6 @@ void Worker::work()
 		else
 		{
 			fd = openFile(tfile.c_str());
-			std::cout << "tfile:" << tfile << std::endl;
 			if (tfile.find(".ico") != -1)
 			{
 				sendResponse(connfd, fd, 200, "OK", content_type["ico"]);
@@ -120,7 +119,6 @@ void Worker::work()
 	else if (!strcmp(tstatus.c_str(), "POST"))
 	{
 		//POST请求
-		std::cout << "post tline:" << tline << std::endl;
 		MYSQL* conn = nullptr;
 		connRAII sqlconn(pool, &conn);
 		parser.getInfo(buf, info);
@@ -170,6 +168,21 @@ void Worker::work()
 	if (tmpline.find("HTTP/1.0") != -1)
 		close(connfd);
 }
+
+const char* Worker::getHost(const char* buf)
+{
+	std::string hostpos(buf);
+	std::string host;
+	int hostpos1 = hostpos.find("Host: ");
+	int hostpos2 = hostpos1 + 6;
+	int cnt = 0;
+	while (hostpos[hostpos2] != '\n')
+	{
+		host[cnt++] = hostpos[hostpos2++];
+	}
+	return host.c_str();
+}
+
 void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type)
 {
 	char buf[4096]{ '0' };
@@ -199,7 +212,7 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 	//ToDo:多线程下关闭速度较慢
 	close(fd);
 
-	std::cout << "sendResponse" << std::endl;
+	LOG_INFO("SendResponse");
 }
 
 bool Worker::check(MYSQL* conn, const std::string& username, const std::string& pwd)

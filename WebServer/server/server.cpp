@@ -47,7 +47,8 @@ void Server::setNoblock(const int& fd)
 
 void Server::clearall(const int& connfd)
 {
-	std::cout << "close:" << connfd << "  " << errno << std::endl;
+	LOG_DEBUG("Close:%d", connfd);
+	LOG_DEBUG("Errno:%d", errno);
 	epoll_ctl(epollfd, EPOLL_CTL_DEL, connfd, 0);
 	auto it = workers.find(connfd);
 	delete it->second;
@@ -140,7 +141,7 @@ void Server::serverListen()
 			}
 			else if (eve[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 			{
-				printf("ERRORHUP\n");
+				LOG_DEBUG("EPOLLHUP");
 				clearall(eve[i].data.fd);
 			}
 			else if ((eve[i].data.fd == pipe[0]) && (eve[i].events & EPOLLIN))
@@ -150,7 +151,7 @@ void Server::serverListen()
 				int ret = recv(pipe[0], signals, sizeof(signals), 0);
 				if (ret == -1)
 				{
-					std::cout << "pipeError" << errno << std::endl;
+					LOG_ERROR("pipeError:%d", errno);
 					continue;
 				}
 				else if (ret == 0)
@@ -162,15 +163,11 @@ void Server::serverListen()
 						switch (signals[i])
 						{
 						case SIGALRM:
-						{
 							timeout = true;
 							break;
-						}
 						case SIGTERM:
-						{
 							stop = true;
 							break;
-						}
 						default:
 							break;
 						}
