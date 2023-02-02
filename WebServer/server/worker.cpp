@@ -65,11 +65,6 @@ void Worker::work()
 		{
 			break;
 		}
-		else if (len == 0)
-		{
-			LOG_ERROR("Errno:%d", errno);
-			LOG_ERROR("Connfd:%d", connfd);
-		}
 		if (totle + len < sizeof(buf))
 		{
 			memcpy(buf + totle, temp, len);
@@ -211,6 +206,7 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 	time(&timer);
 	//ToDo:多线程下关闭速度较慢
 	close(fd);
+	close(connfd);
 
 	LOG_INFO("SendResponse");
 }

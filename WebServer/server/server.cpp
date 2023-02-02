@@ -68,7 +68,7 @@ void Server::timeoutHandler()
 		}
 	}
 	//alarm只触发一次
-	alarm(5);
+	alarm(15);
 }
 
 void Server::serverListen()
@@ -108,7 +108,7 @@ void Server::serverListen()
 	bool stop = false;
 	bool timeout = false;
 
-	alarm(5);
+	alarm(15);
 
 	while (!stop)
 	{
@@ -180,12 +180,12 @@ void Server::serverListen()
 				Workerlist.push_back(worker);
 				threadpool->add(worker);
 			}
-			else if (eve[i].events & EPOLLOUT)
-			{
-				std::cout << "EPOLLOUT" << std::endl;
-				/*Worker* worker = workers[eve[i].data.fd];
-				threadpool->add(worker);*/
-			}
+			//else if (eve[i].events & EPOLLOUT)
+			//{
+			//	std::cout << "EPOLLOUT" << std::endl;
+			//	/*Worker* worker = workers[eve[i].data.fd];
+			//	threadpool->add(worker);*/
+			//}
 		}
 		if (timeout)
 		{
