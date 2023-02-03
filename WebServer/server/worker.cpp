@@ -56,8 +56,8 @@ const int& Worker::getConnfd()
 void Worker::work()
 {
 	int len = 0, totle = 0;
-	char buf[4096]{ '0' };
 	char temp[4096]{ '0' };
+	char buf[4096]{ '0' };
 	while (true)
 	{
 		len = recv(connfd, temp, sizeof(temp), NULL);
@@ -73,7 +73,8 @@ void Worker::work()
 	}
 	modfd(epollfd, connfd);
 
-	LOG_INFO("Host:%s", getHost(buf));
+	LOG_INFO("Host:%s", getHost(buf, "Host: ", 6));
+	video = buf;
 	parser.getLine(buf, tline);
 	parser.getStatus(tline, tstatus);
 	parser.getFile(tline, tfile);
@@ -164,16 +165,15 @@ void Worker::work()
 		close(connfd);
 }
 
-const char* Worker::getHost(const char* buf)
+const char* Worker::getHost(const char* buf, const char* find, const int& n)
 {
 	std::string hostpos(buf);
 	std::string host;
-	int hostpos1 = hostpos.find("Host: ");
-	int hostpos2 = hostpos1 + 6;
+	int hostpos1 = hostpos.find(find) + n;
 	int cnt = 0;
-	while (hostpos[hostpos2] != '\n')
+	while (hostpos[hostpos1] != '\n')
 	{
-		host[cnt++] = hostpos[hostpos2++];
+		host[cnt++] = hostpos[hostpos1++];
 	}
 	return host.c_str();
 }
@@ -195,18 +195,8 @@ void Worker::sendResponse(const int& cfd, const  int& fd, const int& status, con
 	}
 
 	int ret = send(cfd, buf, strlen(buf), 0);
-	//ToDo:EPOLLOUT
-	off_t offset = 0;
-	while (offset < st.st_size)
-	{
-		if (st.st_size == 0)
-			modfd(epollfd, connfd);
-		sendfile(connfd, fd, &offset, st.st_size);
-	}
-	time(&timer);
-	//ToDo:多线程下关闭速度较慢
-	close(fd);
-	close(connfd);
+
+	mywrite(0);
 
 	LOG_INFO("SendResponse");
 }
@@ -222,4 +212,28 @@ bool Worker::check(MYSQL* conn, const std::string& username, const std::string& 
 bool Worker::getIswrite()
 {
 	return iswrite;
+}
+
+void Worker::mywrite(off_t out)
+{
+	off_t offset = out;
+	while (offset < st.st_size)
+	{
+		if (st.st_size == 0)
+			modfd(epollfd, connfd);
+		int num = sendfile(connfd, fd, &offset, st.st_size);
+		if (num < 0 && errno == EAGAIN)
+		{
+			epoll_event event;
+			event.data.fd = connfd;
+			event.events = EPOLLOUT | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+			epoll_ctl(epollfd, EPOLL_CTL_MOD, connfd, &event);
+			Server::out = offset;
+			break;
+		}
+	}
+	time(&timer);
+	//ToDo:多线程下关闭速度较慢
+	if (offset == st.st_size)
+		close(fd);
 }

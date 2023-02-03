@@ -41,6 +41,7 @@ private:
 	std::list<Worker*> Workerlist;
 public:
 	static int pipe[2];
+	static off_t out;
 private:
 	void clearall(const int& connfd);
 };

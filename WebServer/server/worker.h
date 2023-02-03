@@ -24,13 +24,14 @@ public:
 
 	int openFile(const char* filename);
 	void work();
-	const char* getHost(const char* buf);
+	const char* getHost(const char* buf, const char* find, const int& n);
 	void sendResponse(const int& cfd, const  int& fd, const int& status, const char* descr, const char* type);
 	bool check(MYSQL* conn, const std::string& username, const std::string& pwd);
 	bool getIswrite();
-
+	void mywrite(off_t out);
 private:
 	char tline[4096] = { '0' };
+	std::string video;
 	char* address;
 	std::string tstatus;
 	std::string tfile;

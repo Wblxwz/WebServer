@@ -15,7 +15,8 @@
 
 #include "server.h"
 
-int Server::pipe[];
+int Server::pipe[2];
+off_t Server::out = 0;
 
 void Server::init(const int& maxconn)
 {
@@ -180,12 +181,11 @@ void Server::serverListen()
 				Workerlist.push_back(worker);
 				threadpool->add(worker);
 			}
-			//else if (eve[i].events & EPOLLOUT)
-			//{
-			//	std::cout << "EPOLLOUT" << std::endl;
-			//	/*Worker* worker = workers[eve[i].data.fd];
-			//	threadpool->add(worker);*/
-			//}
+			else if (eve[i].events & EPOLLOUT)
+			{
+				int cfd = eve[i].data.fd;
+				workers[cfd]->mywrite(out);
+			}
 		}
 		if (timeout)
 		{
