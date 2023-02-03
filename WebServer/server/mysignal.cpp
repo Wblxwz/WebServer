@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <assert.h>
 
-#include "signal.h"
+#include "mysignal.h"
 #include "server.h"
 
 

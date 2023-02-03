@@ -11,7 +11,7 @@
 #include "sqloperate.h"
 #include "worker.h"
 #include "threadpool.h"
-#include "signal.h"
+#include "mysignal.h"
 
 //类内定义函数自动inline
 class Server
