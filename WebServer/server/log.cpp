@@ -69,7 +69,7 @@ void Log::writeLog(const int& level, const char* format, ...)
 	int year = now->tm_year + 1900, month = now->tm_mon + 1, day = now->tm_mday;
 	time_t tt = time(nullptr);
 	now = localtime(&tt);
-	if ((year != (now->tm_year + 1900)) || (month != (now->tm_mon + 1)) || (day != now->tm_mday) || count == split_lines)
+	if ((year != (now->tm_year + 1900)) || (month != (now->tm_mon + 1)) || (day != now->tm_mday) || count >= split_lines)
 	{
 		fflush(fp);
 		fclose(fp);

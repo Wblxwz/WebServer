@@ -51,10 +51,7 @@ const int HttpParser::getFile(const std::string& tline, std::string& tfile)
 	}
 	else
 	{
-		//ToDo:favicon.ico
-		std::cout << "favicon.ico" << std::endl;
 		tfile = tline.substr(pos, 11);
-		std::cout << "ss" << tfile << std::endl;
 		return 11;
 	}
 
@@ -69,12 +66,10 @@ void HttpParser::getInfo(const char* buf, Info& info)
 	int pos2 = username.find("&pwd=");
 
 	username = username.substr(pos1 + 5, pos2 - (pos1 + 5));
-	std::cout << "username:" << username << std::endl;
 
 	int pos = userpwd.find("&pwd=");
 
 	userpwd = userpwd.substr(pos + 5, userpwd.size() - (pos + 5));
-	std::cout << "userpwd:" << userpwd << std::endl;
 
 	info.setInfo(username, userpwd);
 }
