@@ -68,7 +68,7 @@ void Server::timeoutHandler()
 		}
 	}
 	//alarm只触发一次
-	alarm(15);
+	alarm(5);
 }
 
 void Server::serverListen()
@@ -108,7 +108,7 @@ void Server::serverListen()
 	bool stop = false;
 	bool timeout = false;
 
-	alarm(15);
+	alarm(5);
 
 	while (!stop)
 	{
