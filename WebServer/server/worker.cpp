@@ -234,6 +234,6 @@ void Worker::mywrite(off_t out)
 	}
 	time(&timer);
 	//ToDo:多线程下关闭速度较慢
-	if (offset == st.st_size)
+	if (offset >= st.st_size)
 		close(fd);
 }
