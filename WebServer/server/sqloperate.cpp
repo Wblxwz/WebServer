@@ -25,10 +25,8 @@ bool SqlOperate::check(MYSQL* conn, const std::string& username)
 	assert(ret == 0);
 	MYSQL_RES* res = mysql_store_result(conn);
 	MYSQL_ROW row = mysql_fetch_row(res);
-	while ((row = mysql_fetch_row(res)))
-	{
+	if (row)
 		return false;
-	}
 	return true;
 }
 
