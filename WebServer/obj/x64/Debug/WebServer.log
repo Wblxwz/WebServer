@@ -1,0 +1,109 @@
+﻿生成启动时间为 2023/2/11 0:15:52。
+日志记录详细程度设置为: Normal。     1>项目“E:\WorkProjects\WebServer\WebServer\WebServer.vcxproj”在节点 2 上(Build 个目标)。
+     1>InitializeBuildStatus:
+         正在创建“E:\WorkProjects\WebServer\WebServer\obj\x64\Debug\WebServer.tlog\unsuccessfulbuild”，因为已指定“AlwaysCreate”。
+       _ValidateSources:
+         正在验证源
+       _CopySources:
+         正在将源远程复制到“192.168.10.150”
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\http_parse.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\info.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\log.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\main.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\server.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\mysignal.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\sqlconnpool.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\sqloperate.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\threadpool.cpp”，因为它已是最新版本。
+         正在将文件“E:\WorkProjects\WebServer\WebServer\server\worker.cpp”复制到“/root/WebServer/WebServer/server/worker.cpp”
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\blockqueue.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\connRAII.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\http_parse.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\info.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\log.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\server.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\mysignal.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\sqlconnpool.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\sqloperate.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\threadpool.h”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\worker.h”，因为它已是最新版本。
+       _ValidateCompatibleRemoteArchitectures:
+         正在验证体系结构
+       _ValidateValidArchitecture:
+         正在验证体系结构
+         当前项目体系结构“x64”兼容远程系统体系结构“x64”(“x64”)。
+       ClCompile:
+         正在启动远程生成
+         正在编译源:
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\http_parse.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\info.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\log.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\main.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\server.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\mysignal.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\sqlconnpool.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\sqloperate.cpp”，因为它已是最新版本。
+         正在跳过“E:\WorkProjects\WebServer\WebServer\server\threadpool.cpp”，因为它已是最新版本。
+         正在调用“g++”
+         g++ -c -x c++ /root/WebServer/WebServer/server/worker.cpp -I /usr/include/mysql -g2 -gdwarf-2 -o "/root/WebServer/WebServer/obj/x64/Debug/worker.o" -Wall -Wswitch -W"no-deprecated-declarations" -W"empty-body" -Wconversion -W"return-type" -Wparentheses -W"no-format" -Wuninitialized -W"unreachable-code" -W"unused-function" -W"unused-value" -W"unused-variable" -O0 -fno-strict-aliasing -fno-omit-frame-pointer -fthreadsafe-statics -fexceptions -frtti -std=c++11
+         worker.cpp
+         /root/WebServer/WebServer/server/worker.cpp: 在成员函数‘void Worker::work()’中:
+         /root/WebServer/WebServer/server/worker.cpp:63:46: 警告：将 NULL 作为非指针实参 4 传递给‘ssize_t recv(int, void*, size_t, int)’ [-Wconversion-null]
+            len = recv(connfd, temp, sizeof(temp), NULL);
+                                                       ^
+         /root/WebServer/WebServer/server/worker.cpp:63:46: 警告：‘int’转换自‘ssize_t {aka long int}’时可能改变值 [-Wconversion]
+         /root/WebServer/WebServer/server/worker.cpp:68:31: 警告：在有符号和无符号整数表达式间比较 [-Wsign-compare]
+            if (totle + len < sizeof(buf))
+                                        ^
+         /root/WebServer/WebServer/server/worker.cpp:93:31: 警告：在有符号和无符号整数表达式间比较 [-Wsign-compare]
+             if (tfile.find(".ico") != -1)
+                                        ^
+         /root/WebServer/WebServer/server/worker.cpp:97:36: 警告：在有符号和无符号整数表达式间比较 [-Wsign-compare]
+             else if (tfile.find(".jpg") != -1)
+                                             ^
+         /root/WebServer/WebServer/server/worker.cpp:101:36: 警告：在有符号和无符号整数表达式间比较 [-Wsign-compare]
+             else if (tfile.find(".rar") != -1)
+                                             ^
+         /root/WebServer/WebServer/server/worker.cpp:105:36: 警告：在有符号和无符号整数表达式间比较 [-Wsign-compare]
+             else if (tfile.find(".mp4") != -1)
+                                             ^
+         /root/WebServer/WebServer/server/worker.cpp:164:35: 警告：在有符号和无符号整数表达式间比较 [-Wsign-compare]
+           if (tmpline.find("HTTP/1.0") != -1)
+                                            ^
+         /root/WebServer/WebServer/server/worker.cpp: 在成员函数‘const char* Worker::getHost(const char*, const char*, const int&)’中:
+         /root/WebServer/WebServer/server/worker.cpp:172:36: 警告：‘int’转换自‘std::basic_string<char>::size_type {aka long unsigned int}’时可能改变值 [-Wconversion]
+           int hostpos1 = hostpos.find(find) + n;
+                                             ^
+         /root/WebServer/WebServer/server/worker.cpp: 在成员函数‘void Worker::sendResponse(const int&, const int&, const int&, const char*, const char*)’中:
+         /root/WebServer/WebServer/server/worker.cpp:189:28: 警告：在有符号和无符号整数表达式间比较 [-Wsign-compare]
+           if (tfile.find("mp4") == -1)
+                                     ^
+         /root/WebServer/WebServer/server/worker.cpp:197:41: 警告：‘int’转换自‘ssize_t {aka long int}’时可能改变值 [-Wconversion]
+           int ret = send(cfd, buf, strlen(buf), 0);
+                                                  ^
+         /root/WebServer/WebServer/server/worker.cpp:197:6: 警告：未使用的变量‘ret’ [-Wunused-variable]
+           int ret = send(cfd, buf, strlen(buf), 0);
+               ^
+         /root/WebServer/WebServer/server/worker.cpp: 在成员函数‘void Worker::mywrite(off_t)’中:
+         /root/WebServer/WebServer/server/worker.cpp:224:53: 警告：‘int’转换自‘ssize_t {aka long int}’时可能改变值 [-Wconversion]
+            int num = sendfile(connfd, fd, &offset, st.st_size);
+                                                              ^
+         
+         已完成编译“/root/WebServer/WebServer/server/worker.cpp”
+       Link:
+         正在链接对象
+         正在调用“ld”
+         g++ -o "/root/WebServer/WebServer/bin/x64/Debug/WebServer.out" -Wl,--no-undefined -Wl,-L/usr/lib64/mysql -Wl,-L/usr/lib64 -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack /root/WebServer/WebServer/obj/x64/Debug/http_parse.o /root/WebServer/WebServer/obj/x64/Debug/info.o /root/WebServer/WebServer/obj/x64/Debug/log.o /root/WebServer/WebServer/obj/x64/Debug/main.o /root/WebServer/WebServer/obj/x64/Debug/server.o /root/WebServer/WebServer/obj/x64/Debug/mysignal.o /root/WebServer/WebServer/obj/x64/Debug/sqlconnpool.o /root/WebServer/WebServer/obj/x64/Debug/sqloperate.o /root/WebServer/WebServer/obj/x64/Debug/threadpool.o /root/WebServer/WebServer/obj/x64/Debug/worker.o -lmysqlclient -lpthread
+         已完成链接，输出文件名:“/root/WebServer/WebServer/bin/x64/Debug/WebServer.out”
+         正在将文件“/root/WebServer/WebServer/bin/x64/Debug/WebServer.out”复制到“E:\WorkProjects\WebServer\WebServer\bin\x64\Debug\WebServer.out”
+         WebServer.vcxproj -> E:\WorkProjects\WebServer\WebServer\bin\x64\Debug\WebServer.out
+       FinalizeBuildStatus:
+         正在删除文件“E:\WorkProjects\WebServer\WebServer\obj\x64\Debug\WebServer.tlog\unsuccessfulbuild”。
+         正在对“E:\WorkProjects\WebServer\WebServer\obj\x64\Debug\WebServer.tlog\WebServer.lastbuildstate”执行 Touch 任务。
+     1>已完成生成项目“E:\WorkProjects\WebServer\WebServer\WebServer.vcxproj”(Build 个目标)的操作。
+
+已成功生成。
+    0 个警告
+    0 个错误
+
+已用时间 00:00:09.06

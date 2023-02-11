@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <dirent.h>
 
 #include "worker.h"
 #include "server.h"

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="server\server.h" />
+    <ClInclude Include="server\http_parse.h" />
+    <ClInclude Include="server\sqlconnpool.h" />
+    <ClInclude Include="server\connRAII.h" />
+    <ClInclude Include="server\info.h" />
+    <ClInclude Include="server\sqloperate.h" />
+    <ClInclude Include="server\threadpool.h" />
+    <ClInclude Include="server\worker.h" />
+    <ClInclude Include="server\mysignal.h" />
+    <ClInclude Include="server\blockqueue.h" />
+    <ClInclude Include="server\log.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="server\server.cpp" />
+    <ClCompile Include="server\main.cpp" />
+    <ClCompile Include="server\http_parse.cpp" />
+    <ClCompile Include="server\sqlconnpool.cpp" />
+    <ClCompile Include="server\info.cpp" />
+    <ClCompile Include="server\sqloperate.cpp" />
+    <ClCompile Include="server\threadpool.cpp" />
+    <ClCompile Include="server\worker.cpp" />
+    <ClCompile Include="server\mysignal.cpp" />
+    <ClCompile Include="server\log.cpp" />
+  </ItemGroup>
+</Project>
